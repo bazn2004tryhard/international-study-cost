@@ -2,7 +2,7 @@
 DB_CONFIG = {
     "host": "localhost",
     "user": "root",
-    "password": "123456",
+    "password": "Legiauy2004@@",
     "database": "international_education",
     "port": 3306
 }

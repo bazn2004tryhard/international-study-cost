@@ -1,4 +1,5 @@
 import tkinter as tk
+from PIL import Image, ImageTk
 from tkinter import ttk, messagebox
 
 class ManageStudyCostWindow(tk.Toplevel):
@@ -7,36 +8,68 @@ class ManageStudyCostWindow(tk.Toplevel):
         self.controller = controller
         self.title("Manage Study Costs")
         self.geometry("1400x700")
-        self.configure(bg="#578FCA")
-        self.transient(master)
+        self.configure(bg="white")
         self.focus_set()
-        header = tk.Label(self, text="Manage Study Costs", bg="#D1F8EF", fg="#3674B5", font=("Arial", 20, "bold"))
-        header.pack(side="top", fill="x")
-
+        header = tk.Label(self, text="📚 Manage Study Costs", bg="#1E88E5", fg="white", font=("Segoe", 16, "bold"))
+        header.pack(side="top", fill="x",padx=5)
+        self.load_icons()  # gọi trước create_widgets()
+        self.setup_styles()
         self.create_widgets()
         self.load_combos()
         self.refresh_list()
 
+    def load_icons(self):
+        self.add_icon = ImageTk.PhotoImage(Image.open("views/icons/add.png").resize((18, 18)))
+        self.update_icon = ImageTk.PhotoImage(Image.open("views/icons/update.png").resize((18, 18)))
+        self.delete_icon = ImageTk.PhotoImage(Image.open("views/icons/delete.png").resize((18, 18)))
+        self.find_icon = ImageTk.PhotoImage(Image.open("views/icons/find.png").resize((18, 18)))
+        self.clear_icon = ImageTk.PhotoImage(Image.open("views/icons/clear.png").resize((18, 18)))
+    def setup_styles(self):
+        style = ttk.Style()
+        style.theme_use("clam")
+        style.configure(
+            "Treeview",
+            font=("Segoe UI", 10),
+            rowheight=26,
+            background="white",
+            fieldbackground="white"
+        )
+        style.configure(
+            "Treeview.Heading",
+            font=("Segoe UI", 10, "bold"),
+            foreground="white",
+            background= "#1E88E5"
+        )
+        style.map("Treeview", background=[("selected", "#5D866C")])
+
+        # Button Style
+        self.btn_normal = {
+            "bg": "white",
+            "fg": "#3674B5",
+            "activebackground": "#E3F2FD",
+            "activeforeground": "#0D47A1",
+            "bd": 1,
+            "relief": "solid",
+            "highlightthickness": 0
+        }
     def create_widgets(self):
-        mainframe = tk.Frame(self, bg="#578FCA")
-        mainframe.pack(fill="both", expand=True, padx=10, pady=10)
+        mainframe = tk.Frame(self, bg="white")
+        mainframe.pack(fill="both", expand=True, padx=10)
         mainframe.grid_columnconfigure(0, weight=8)
         mainframe.grid_columnconfigure(1, weight=2)
         mainframe.grid_rowconfigure(0, weight=1)
 
         # Left: Treeview
-        left_frame = tk.Frame(mainframe, bg="#A1E3F9")
-        left_frame.grid(row=0, column=0, sticky="nsew", padx=5,pady=10)
+        left_frame = tk.Frame(mainframe, bg="#1E88E5", bd=1, relief="solid")
+        left_frame.grid(row=0, column=0,rowspan=2, sticky="nsew", padx=5,pady=10)
         left_frame.grid_rowconfigure(2, weight=1)
         left_frame.grid_columnconfigure(0, weight=1)
-        tk.Label(left_frame, text="Study Cost Records", bg="#A1E3F9", fg="#3674B5", font=("Arial", 16, "bold")).grid(row=0, column=0, columnspan=2, pady=5)
+        tk.Label(left_frame, text="📚 Study Cost Records",bg="#1E88E5", fg="white",
+                font=("Segoe UI", 12, "bold")).grid(row=0, column=0, columnspan=2, pady=5)
 
-        tk.Frame(left_frame, bg="#578FCA", height=10).grid(row=1, column=0, columnspan=2, sticky="ew")
+        tk.Frame(left_frame, bg="white", height=3).grid(row=1, column=0, columnspan=2, sticky="ew")
 
         columns = ("id", "university", "program", "duration", "tuition", "living_idx", "rent", "visa", "insurance", "exchange")
-        style = ttk.Style() 
-        style.theme_use("clam") 
-        style.configure("Treeview.Heading", background="#A1E3F9", foreground="#3674B5", font=("Arial", 8,"bold")) 
         self.tree = ttk.Treeview(left_frame, columns=columns, show="headings", height=20)        
         headers = [
             ("id", "ID", 50), 
@@ -60,25 +93,37 @@ class ManageStudyCostWindow(tk.Toplevel):
         vsb.grid(row=2, column=1, sticky="ns")
         self.tree.configure(yscrollcommand=vsb.set)
 
-        # Right: Form
-        right_frame = tk.Frame(mainframe, bg="#A1E3F9")
-        right_frame.grid(row=0, column=1,padx=5,pady=10,sticky="nsew")   
-        tk.Label(right_frame, text="Cost Details",  bg="#A1E3F9", fg="#3674B5",
-        font=("Arial", 16, "bold")).grid(row=0, column=0, columnspan=2, pady=5)
+           # ===================== FORM =====================
+     
+        right_frame = tk.Frame(mainframe,bg="white", bd=1, relief="solid")
+        right_frame.grid(row=0, column=1,padx=5,pady=10,sticky="nsew")
         right_frame.grid_columnconfigure(1, weight=1)
-        tk.Frame(right_frame, bg="#578FCA", height=10).grid(row=1, column=0, columnspan=2, sticky="ew")
+           
+         # Heading riêng
+        heading = tk.Frame(right_frame, bg="#1E88E5")
+        heading.grid(row=0, column=0, columnspan=2, sticky="ew")
+        tk.Label(heading, text="✏️ Cost Details", bg="#1E88E5", fg="white",
+                font=("Segoe UI", 12, "bold")).pack(pady=5, fill="x")
+        # Search
+        search_frame = tk.Frame(right_frame, bg="white")
+        search_frame.grid(row=1, column=0, columnspan=2, pady=10)
+        tk.Label(search_frame, text="Search", bg="white", fg="#3674B5",
+                font=("Arial", 10, "bold")).grid(row=0, column=0, sticky="w", pady=5)
+        self.search_var = tk.StringVar()
+        tk.Entry(search_frame, textvariable=self.search_var, width=25).grid(row=0, column=1, pady=5)
+        tk.Button(search_frame, text="Find", command=self.on_search,
+                image=self.find_icon, compound="left", width=60, **self.btn_normal).grid(row=0, column=2, padx=5, pady=2)
 
-        row_id = 2  # dùng để tăng row cho grid
+        row_id = 2
 
-        # University & Program
         for label, var, combo in [
             ("University", "uni_var", "uni_combo"),
             ("Program", "prog_var", "prog_combo")
         ]:
             tk.Label(
-                right_frame, text=label, bg="#A1E3F9", fg="#3674B5",
+                right_frame, text=label, bg="white", fg="#3674B5",
                 font=("Arial", 10, "bold")
-            ).grid(row=row_id, column=0, sticky="e", pady=5)
+            ).grid(row=row_id, column=0,padx=(10,0), sticky="w",pady=3)
 
             setattr(self, var, tk.StringVar())
             cb = ttk.Combobox(
@@ -86,23 +131,17 @@ class ManageStudyCostWindow(tk.Toplevel):
                 state="readonly", width=25
             )
             setattr(self, combo, cb)
-            cb.grid(row=row_id, column=1, sticky="w",padx=10, pady=5)
+            cb.grid(row=row_id, column=1, sticky="w",padx=(5,10), pady=3)
             row_id += 1
-
-
-        # Duration
         tk.Label(
-            right_frame, text="Duration\n(years)", bg="#A1E3F9", fg="#3674B5",
+            right_frame, text="Duration\n(years)",  bg="white", fg="#3674B5",
             font=("Arial", 10, "bold")
-        ).grid(row=row_id, column=0, sticky="e", pady=(5, 3))
+        ).grid(row=row_id, column=0,padx=(10,0), sticky="w",pady=3)
 
         self.duration_var = tk.StringVar()
         tk.Entry(right_frame, textvariable=self.duration_var, width=25)\
-            .grid(row=row_id, column=1, sticky="w",padx=10, pady=5)
+            .grid(row=row_id, column=1, sticky="w",padx=(5,10), pady=3)
         row_id += 1
-
-
-        # Cost fields
         self.cost_vars = {}
         fields = [
             ("Tuition\n(USD/year)", "tuition_var"),
@@ -115,46 +154,74 @@ class ManageStudyCostWindow(tk.Toplevel):
 
         for label, varname in fields:
             tk.Label(
-                right_frame, text=label, bg="#A1E3F9", fg="#3674B5",
+                right_frame, text=label, bg="white", fg="#3674B5",
                 font=("Arial", 10, "bold")
-            ).grid(row=row_id, column=0, sticky="e", pady=(5, 3))
+            ).grid(row=row_id, column=0,padx=(10,0), sticky="w",pady=3)
 
             var = tk.StringVar()
             tk.Entry(right_frame, textvariable=var, width=25)\
-                .grid(row=row_id, column=1, sticky="w",padx=10, pady=3)
+                .grid(row=row_id, column=1, sticky="w",padx=(5,10), pady=3)
 
             self.cost_vars[varname] = var
             row_id += 1
 
+        # Buttons (Add, Update, Delete, , Clear)
+        btns = tk.Frame(right_frame, bg="white")
+        btns.grid(row=row_id, column=0, columnspan=2, pady=2)
 
-        # Search
-        tk.Label(
-            right_frame, text="Search", bg="#A1E3F9", fg="#3674B5",
-            font=("Arial", 10, "bold")
-        ).grid(row=row_id, column=0, sticky="e", pady=(5, 3))
-
-        self.search_var = tk.StringVar()
-        tk.Entry(right_frame, textvariable=self.search_var, width=25)\
-            .grid(row=row_id, column=1, sticky="w",padx=10, pady=5)
-        row_id += 1
-
-
-        # Buttons (Add, Update, Delete, Find, Clear)
-        btns = tk.Frame(right_frame, bg="#A1E3F9")
-        btns.grid(row=row_id, column=0, columnspan=2, pady=10)
-
-        for i, (text, cmd) in enumerate([
-            ("Add", self.on_add),
-            ("Update", self.on_update),
-            ("Delete", self.on_delete),
-            ("Find", self.on_search),
-            ("Clear", self.clear_form)
+        for i, (text, cmd,img) in enumerate([
+            ("Add", self.on_add,self.add_icon),
+            ("Update", self.on_update,self.update_icon),
+            ("Delete", self.on_delete,self.delete_icon),
+            ("Clear", self.clear_form,self.clear_icon)
         ]):
             tk.Button(
-                btns, text=text, command=cmd,
-                bg="#3674B5", fg="white", width=7,
-                font=("Arial", 9, "bold")
-            ).grid(row=i//3, column=i % 3, padx=8, pady=6)
+                btns, text=text, command=cmd,image=img,
+                compound="left", width=60, **self.btn_normal
+            ).grid(row=0, column=i , padx=3, pady=2)
+        
+        # ---- Summary Card: Total Study Costs ----
+        card_frame = tk.Frame(mainframe, bg="white", bd=1, relief="solid")
+        card_frame.grid(row=1, column=1, pady=5, sticky="n")
+
+        summary_card = tk.Frame(card_frame, width=280, height=140, bd=0, relief="flat")
+        summary_card.pack()
+        summary_card.pack_propagate(False)
+
+        # Background image hoặc fallback màu nền
+        try:
+            from PIL import Image, ImageTk
+            bg_img = Image.open("views/images/study_cost.png").resize((280, 140))
+            self.study_card_bg = ImageTk.PhotoImage(bg_img)
+            tk.Label(summary_card, image=self.study_card_bg, bd=0).place(x=0, y=0)
+        except:
+            summary_card.configure(bg="#D1F8EF")
+            tk.Label(summary_card, bg="#D1F8EF").place(x=0, y=0, relwidth=1, relheight=1)
+
+        # Lấy tổng số Study Cost records
+        try:
+            total_costs = len(self.controller.get_all_study_costs())
+        except:
+            total_costs = 0
+
+        # Số lượng hiển thị lớn
+        self.study_count_label = tk.Label(
+            summary_card,
+            text=str(total_costs),
+            font=("Segoe UI", 32, "bold"),
+            fg="#3674B5",          # chữ xanh
+            bg=summary_card["bg"]  # nền đồng bộ
+        )
+        self.study_count_label.place(x=20, y=30)
+
+        # Text mô tả
+        tk.Label(
+            summary_card,
+            text="Total Study Cost Records",
+            font=("Segoe UI", 12, "bold"),
+            fg="#3674B5",
+            bg=summary_card["bg"]
+        ).place(x=20, y=85)
 
     def load_combos(self):
         unis = self.controller.get_universities()
@@ -183,17 +250,11 @@ class ManageStudyCostWindow(tk.Toplevel):
         if not sel:
             return
         cost_id = self.tree.item(sel[0])["values"][0]
-
-        # Lấy 1 lần duy nhất
         row = self.controller.get_cost_by_id(cost_id) 
         if not row:
             return
-
-        # Set combo
         self.uni_var.set(f"{row['university']} - {row['city']}, {row['country']}")
         self.prog_var.set(f"{row['program']} ({row['level']})")
-
-        # Set các field
         fields = {
             "duration_var": row['duration_years'],
             "tuition_var": row['tuition_usd'],
@@ -243,27 +304,46 @@ class ManageStudyCostWindow(tk.Toplevel):
     def on_update(self):
         cost_id = self.selected_id()
         if not cost_id:
-            messagebox.showwarning("Chọn", "Vui lòng chọn một bản ghi!")
+            messagebox.showwarning("Warning", "Please select a study cost to update!")
             return
+        new_data = {
+            "university_id": self.uni_map.get(self.uni_var.get()),
+            "program_id": self.prog_map.get(self.prog_var.get()),
+            "duration_years": self.get_decimal(self.duration_var),
+            "tuition_usd": self.get_decimal(self.cost_vars["tuition_var"]),
+            "living_cost_index": self.get_decimal(self.cost_vars["living_idx_var"]),
+            "rent_usd": self.get_decimal(self.cost_vars["rent_var"]),
+            "visa_fee_usd": self.get_decimal(self.cost_vars["visa_var"]),
+            "insurance_usd": self.get_decimal(self.cost_vars["insurance_var"]),
+            "exchange_rate": self.get_decimal(self.cost_vars["exchange_var"]),
+        }
 
         try:
-            self.controller.update_study_cost(
-                cost_id,
-                university_id=self.uni_map.get(self.uni_var.get()),
-                program_id=self.prog_map.get(self.prog_var.get()),
-                duration_years=self.get_decimal(self.duration_var),
-                tuition_usd=self.get_decimal(self.cost_vars["tuition_var"]),
-                living_cost_index=self.get_decimal(self.cost_vars["living_idx_var"]),
-                rent_usd=self.get_decimal(self.cost_vars["rent_var"]),
-                visa_fee_usd=self.get_decimal(self.cost_vars["visa_var"]),
-                insurance_usd=self.get_decimal(self.cost_vars["insurance_var"]),
-                exchange_rate=self.get_decimal(self.cost_vars["exchange_var"]),
-            )
-            messagebox.showinfo("Thành công", "Cập nhật thành công!")
+            old_data = self.controller.get_study_cost(cost_id)
+            # old_data phải là dict: {"university_id":..., "tuition_usd":..., ...}
+        except Exception as e:
+            messagebox.showerror("Error", f"Unable to retrieve old data:\n{e}")
+            return
+        no_change = True
+        for key in new_data:
+            old_val = old_data.get(key)
+            new_val = new_data.get(key)
+
+            if str(old_val) != str(new_val):
+                no_change = False
+                break
+
+        if no_change:
+            messagebox.showinfo("No Change", "No changes detected to update.")
+            return
+        try:
+            self.controller.update_study_cost(cost_id, **new_data)
+            messagebox.showinfo("Success", "Study cost updated successfully!")
             self.refresh_list()
             self.clear_form()
         except Exception as e:
-            messagebox.showerror("Lỗi", f"Không thể cập nhật:\n{e}")
+            messagebox.showerror("Error", f"Unable to update:\n{e}")
+
     def on_delete(self):
         cid = self.selected_id()
         if cid and messagebox.askyesno("Confirm", "Delete this study cost record?"):

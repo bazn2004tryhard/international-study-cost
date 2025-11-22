@@ -1,4 +1,5 @@
 import tkinter as tk
+from PIL import Image, ImageTk
 from tkinter import ttk, messagebox
 
 class ManageProgramWindow(tk.Toplevel):
@@ -6,44 +7,75 @@ class ManageProgramWindow(tk.Toplevel):
         super().__init__(master)
         self.controller = controller
         self.title("Manage Programs")
-        self.geometry("860x600")
-        self.configure(bg="#578FCA")
-        self.transient(master)
+        self.geometry("850x600")
+        self.configure(bg="white")
         self.focus_set()
-        header = tk.Label(self, text="Manage Programs", bg="#D1F8EF", fg="#3674B5", font=("Arial", 20, "bold"))
-        header.pack(side="top", fill="x")
-
+        header = tk.Label(self, text="📑Manage Programs",bg="#1E88E5", fg="white",
+                          font=("Segoe", 16, "bold"))
+        header.pack(side="top", fill="x",padx=5)
+        self.load_icons()  # gọi trước create_widgets()
+        self.setup_styles()
         self.create_widgets()
         self.refresh_list()
+    # LOAD ICONS
+    # ------------------------------------------------------
+    def load_icons(self):
+        self.add_icon = ImageTk.PhotoImage(Image.open("views/icons/add.png").resize((18, 18)))
+        self.update_icon = ImageTk.PhotoImage(Image.open("views/icons/update.png").resize((18, 18)))
+        self.delete_icon = ImageTk.PhotoImage(Image.open("views/icons/delete.png").resize((18, 18)))
+        self.find_icon = ImageTk.PhotoImage(Image.open("views/icons/find.png").resize((18, 18)))
+        self.clear_icon = ImageTk.PhotoImage(Image.open("views/icons/clear.png").resize((18, 18)))
+    def setup_styles(self):
+        style = ttk.Style()
+        style.theme_use("clam")
+        style.configure(
+            "Treeview",
+            font=("Segoe UI", 10),
+            rowheight=26,
+            background="white",
+            fieldbackground="white"
+        )
+        style.configure(
+            "Treeview.Heading",
+            font=("Segoe UI", 10, "bold"),
+            foreground="white",
+            background= "#1E88E5"
+        )
+        style.map("Treeview", background=[("selected", "#5D866C")])
 
+        self.btn_normal = {
+            "bg": "white",
+            "fg": "#3674B5",
+            "activebackground": "#E3F2FD",
+            "activeforeground": "#0D47A1",
+            "bd": 1,
+            "relief": "solid",
+            "highlightthickness": 0
+        }
     def create_widgets(self):
         # frame chính, đặt nền cùng màu
-        mainframe = tk.Frame(self, bg="#578FCA")
-        mainframe.pack(fill="both", expand=True, padx=10, pady=10)
+        mainframe = tk.Frame(self, bg="white")
+        mainframe.pack(fill="both", expand=True, padx=10)
 
         mainframe.grid_columnconfigure(0, weight=7)
         mainframe.grid_columnconfigure(1, weight=3)
         mainframe.grid_rowconfigure(0, weight=1)
 
         # ===================== LEFT FRAME =====================
-        left_frame = tk.Frame(mainframe, bg="#A1E3F9")
-        left_frame.grid(row=0, column=0, sticky="nsew", padx=5, pady=10)
+        left_frame = tk.Frame(mainframe, bg="#1E88E5", bd=1, relief="solid")
+        left_frame.grid(row=0, column=0, rowspan=2,sticky="nsew", padx=5, pady=10)
         left_frame.grid_rowconfigure(2, weight=1)
         left_frame.grid_columnconfigure(0, weight=1)
 
         # Tiêu đề
-        tk.Label(left_frame, text="Program List", bg="#A1E3F9", fg="#3674B5",
-                font=("Arial", 16, "bold")).grid(row=0, column=0, columnspan=2, pady=5)
+        tk.Label(left_frame, text="📑 Program List",bg="#1E88E5", fg="white",
+                font=("Segoe UI", 12, "bold")).grid(row=0, column=0, columnspan=2, pady=5)
 
         # Hàng ngăn cách
-        tk.Frame(left_frame, bg="#578FCA", height=10).grid(row=1, column=0, columnspan=2, sticky="ew")
+        tk.Frame(left_frame, bg="white", height=3).grid(row=1, column=0, columnspan=2, sticky="ew")
 
         # Treeview
         columns = ("id", "name", "level")
-        style = ttk.Style()
-        style.theme_use("clam")
-        style.configure("Treeview.Heading", background="#A1E3F9", foreground="#3674B5", font=("Arial", 10, "bold"))
-
         self.tree = ttk.Treeview(left_frame, columns=columns, show="headings", height=20)
         headers = [
             ("id", "ID", 100),
@@ -61,43 +93,88 @@ class ManageProgramWindow(tk.Toplevel):
         self.tree.bind("<<TreeviewSelect>>", self.on_select)
 
         # ===================== RIGHT FRAME =====================
-        right_frame = tk.Frame(mainframe, bg="#A1E3F9")
+        right_frame = tk.Frame(mainframe, bg="white", bd=1, relief="solid")
         right_frame.grid(row=0, column=1, padx=5, pady=10, sticky="nsew")
         right_frame.grid_columnconfigure(1, weight=1)
+ 
+        heading = tk.Frame(right_frame, bg="#1E88E5")
+        heading.grid(row=0, column=0, columnspan=2, sticky="ew")
+        tk.Label(heading, text="✏️ Program Details",bg="#1E88E5", fg="white",
+                font=("Segoe UI", 12, "bold")).pack(pady=5, fill="x")
 
-        tk.Label(right_frame, text="Program Details", bg="#A1E3F9", fg="#3674B5",
-                font=("Arial", 16, "bold")).grid(row=0, column=0, columnspan=2, pady=5)
+        tk.Frame(right_frame, bg="white", height=3).grid(row=1, column=0, columnspan=2, sticky="ew")
 
-        tk.Frame(right_frame, bg="#578FCA", height=10).grid(row=1, column=0, columnspan=2, sticky="ew")
-
+       # Search
+        search_frame = tk.Frame(right_frame, bg="white")
+        search_frame.grid(row=2, column=0, columnspan=2, pady=10)
+        tk.Label(search_frame, text="Search", bg="white", fg="#3674B5",
+        font=("Arial", 10, "bold")).grid(row=0, column=0, sticky="w", pady=5)
+        self.search_var = tk.StringVar()
+        tk.Entry(search_frame, textvariable=self.search_var, width=25).grid(row=0, column=1, pady=5)
+        tk.Button(search_frame, text="Find", command=self.on_search,
+        image=self.find_icon, compound="left", width=60, **self.btn_normal).grid(row=0, column=2, padx=5, pady=2)
         # Program Name
-        tk.Label(right_frame, text="Program Name", bg="#A1E3F9", fg="#3674B5",
-                font=("Arial", 10, "bold")).grid(row=2, column=0, sticky="e", pady=5)
+        tk.Label(right_frame, text="Program Name",  bg="white", fg="#3674B5",
+        font=("Arial", 10, "bold")).grid(row=3, column=0,padx=(10,0), sticky="w",pady=5)
         self.name_var = tk.StringVar()
-        tk.Entry(right_frame, textvariable=self.name_var, width=28).grid(row=2, column=1, padx=5, pady=5)
+        tk.Entry(right_frame, textvariable=self.name_var, width=28).grid(row=3, column=1,padx=(5,10), pady=5)
 
         # Level
-        tk.Label(right_frame, text="Level", bg="#A1E3F9", fg="#3674B5",
-                font=("Arial", 10, "bold")).grid(row=3, column=0, sticky="e", pady=5)
+        tk.Label(right_frame, text="Level", bg="white", fg="#3674B5",
+                font=("Arial", 10, "bold")).grid(row=4, column=0,padx=(10,0), sticky="w",pady=5)
         self.level_var = tk.StringVar()
         self.level_combo = ttk.Combobox(right_frame, textvariable=self.level_var, width=25)
-        self.level_combo.grid(row=3, column=1, padx=5, pady=5)
-
-        # Search
-        tk.Label(right_frame, text="Search", bg="#A1E3F9", fg="#3674B5",
-                font=("Arial", 10, "bold")).grid(row=4, column=0, sticky="e", pady=5)
-        self.search_var = tk.StringVar()
-        tk.Entry(right_frame, textvariable=self.search_var, width=28).grid(row=4, column=1, padx=5, pady=5)
+        self.level_combo.grid(row=4, column=1,padx=(5,10), pady=5)
 
         # Buttons
-        btns = tk.Frame(right_frame, bg="#A1E3F9")
-        btns.grid(row=5, column=0, columnspan=2, padx=20, pady=10)
+        btns = tk.Frame(right_frame, bg="white")
+        btns.grid(row=5, column=0, columnspan=2, pady=10)
 
-        tk.Button(btns, text="Add", command=self.on_add, bg="#3674B5", fg="white", width=7).grid(row=0, column=0, pady=2)
-        tk.Button(btns, text="Update", command=self.on_update, bg="#3674B5", fg="white", width=7).grid(row=0, column=1, padx=5, pady=2)
-        tk.Button(btns, text="Delete", command=self.on_delete, bg="#3674B5", fg="white", width=7).grid(row=0, column=2, padx=5, pady=2)
-        tk.Button(btns, text="Find", command=self.on_search, bg="#3674B5", fg="white", width=7).grid(row=1, column=0, padx=5, pady=2)
-        tk.Button(btns, text="Clear", command=self.clear_form, bg="#3674B5", fg="white", width=7).grid(row=1, column=1, padx=5, pady=2)
+        tk.Button(btns, text="Add", command=self.on_add, image=self.add_icon,compound="left", width=60, **self.btn_normal).grid(row=0, column=0, pady=2)
+        tk.Button(btns, text="Update", command=self.on_update, image=self.update_icon,compound="left", width=60, **self.btn_normal).grid(row=0, column=1, padx=5, pady=2)
+        tk.Button(btns, text="Delete", command=self.on_delete, image=self.delete_icon,compound="left", width=60, **self.btn_normal).grid(row=0, column=2, padx=5, pady=2)
+        tk.Button(btns, text="Clear", command=self.clear_form, image=self.clear_icon,compound="left", **self.btn_normal).grid(row=0, column=3, padx=5, pady=2)
+        # ---- Summary Card: Total Programs ----
+        card_frame = tk.Frame(mainframe, bg="white", bd=1, relief="solid")
+        card_frame.grid(row=1, column=1, pady=5, sticky="n")
+
+        summary_card = tk.Frame(card_frame, width=280, height=140, bd=0, relief="flat")
+        summary_card.pack()
+        summary_card.pack_propagate(False)
+
+        # Background image hoặc màu nền
+        try:
+            bg_img = Image.open("views/images/program.png").resize((280, 140))
+            self.program_card_bg = ImageTk.PhotoImage(bg_img)
+            tk.Label(summary_card, image=self.program_card_bg, bd=0).place(x=0, y=0)
+        except:
+            summary_card.configure(bg="#FFE0B2")  # màu nền dự phòng
+            tk.Label(summary_card, bg="#FFE0B2").place(x=0, y=0, relwidth=1, relheight=1)
+
+        # Lấy tổng số Programs
+        try:
+            total_programs = len(self.controller.get_all_programs())
+        except:
+            total_programs = 0
+
+        # Số lượng hiển thị lớn
+        self.program_count_label = tk.Label(
+            summary_card,
+            text=str(total_programs),
+            font=("Segoe UI", 32, "bold"),
+            fg="#3674B5",          
+            bg=summary_card["bg"]
+        )
+        self.program_count_label.place(x=20, y=30)
+
+        # Text mô tả
+        tk.Label(
+            summary_card,
+            text="Total Programs",
+            font=("Segoe UI", 12, "bold"),
+            fg="#3674B5",
+            bg=summary_card["bg"]
+        ).place(x=20, y=85)
 
     def refresh_list(self):
         rows = self.controller.get_all_programs()
@@ -132,41 +209,50 @@ class ManageProgramWindow(tk.Toplevel):
         name = self.name_var.get().strip()
         level = self.level_var.get().strip()
         if not name or not level:
-            messagebox.showwarning("Thiếu thông tin", "Tên chương trình và cấp độ không được để trống!")
+            messagebox.showwarning("Input Error", "Program name/Level is required!")
             return
         try:
             self.controller.add_program(name, level)
-            messagebox.showinfo("Thành công", f"Đã thêm chương trình:\n{name}")
+            messagebox.showinfo("Success", "Program updated:\n{name}")
             self.refresh_list()
             self.clear_form()
         except Exception as e:
-            messagebox.showerror("Lỗi", str(e))  # ví dụ lỗi UNIQUE constraint
+            messagebox.showerror("Error", str(e))  
 
     def on_update(self):
         pid = self.selected_id()
         if not pid:
-            messagebox.showwarning("Chọn", "Vui lòng chọn một chương trình để cập nhật!")
+            messagebox.showwarning("Warning", "Please select a program to update!")
             return
-        name = self.name_var.get().strip()
-        level = self.level_var.get().strip()
-        if not name or not level:
-            messagebox.showwarning("Thiếu thông tin", "Tên chương trình và cấp độ không được để trống!")
+        new_name = self.name_var.get().strip()
+        new_level = self.level_var.get().strip()
+
+        if not new_name or not new_level:
+            messagebox.showwarning("Input Error", "Program name/Level is required!")
             return
-        self.controller.update_program(pid, name, level)
+
+        old_item = self.controller.get_program(pid)     
+        old_name = old_item["name"]
+        old_level = old_item["level"]
+        if new_name == old_name and new_level == old_level:
+            messagebox.showinfo("No Change", "No changes detected to update.")
+            return
+        self.controller.update_program(pid, new_name, new_level)
         self.refresh_list()
         self.clear_form()
-        messagebox.showinfo("Thành công", "Chương trình đã được cập nhật!")
+        messagebox.showinfo("Success", "Program updated successfully!")
+
 
     def on_delete(self):
         pid = self.selected_id()
         if not pid:
-            messagebox.showwarning("Chọn", "Vui lòng chọn một chương trình để xóa!")
+            messagebox.showwarning("Warning", "Please select a program to delete!")
             return
-        if messagebox.askyesno("Xác nhận", "Bạn có chắc muốn xóa chương trình này?\nCác chi phí học tập liên quan cũng sẽ bị xóa!"):
+        if messagebox.askyesno("Confirm", "Are you sure you want to delete this program?\n Associated study fees will also be deleted!"):
             self.controller.delete_program(pid)
             self.refresh_list()
             self.clear_form()
-            messagebox.showinfo("Thành công", "Chương trình đã được xóa!")
+            messagebox.showinfo("Success", "Program deleted successfully!")
 
     def on_search(self):
         keyword = self.search_var.get().strip().lower()

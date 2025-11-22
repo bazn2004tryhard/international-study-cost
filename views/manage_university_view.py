@@ -1,4 +1,5 @@
 import tkinter as tk
+from PIL import Image, ImageTk
 from mysql.connector.errors import IntegrityError
 from tkinter import ttk, messagebox
 
@@ -8,50 +9,82 @@ class ManageUniversityWindow(tk.Toplevel):
         self.controller = controller
         self.title("Manage University")
         self.geometry("990x600")
-        self.transient(master)
         self.focus_set()
         # đặt màu nền cho toàn bộ cửa sổ
-        self.configure(bg="#578FCA")
+        self.configure(bg="white")
 
         # thêm label tiêu đề
-        header = tk.Label(self, text="Manage University",
-                          bg="#D1F8EF", fg="#3674B5",
-                          font=("Arial", 20, "bold"))
-        header.pack(side="top",fill="x", pady=0)
-
+        header = tk.Label(self, text="🏫 Manage University",
+                          bg="#1E88E5", fg="white",
+                          font=("Segoe", 16, "bold"))
+        header.pack(side="top",fill="x", padx=5)
+        self.load_icons()  # gọi trước create_widgets()
+        self.setup_styles()
         self.create_widgets()
         self.load_countries()
         self.refresh_list()
 
+
+    # LOAD ICONS
+    # ------------------------------------------------------
+    def load_icons(self):
+        self.add_icon = ImageTk.PhotoImage(Image.open("views/icons/add.png").resize((18, 18)))
+        self.update_icon = ImageTk.PhotoImage(Image.open("views/icons/update.png").resize((18, 18)))
+        self.delete_icon = ImageTk.PhotoImage(Image.open("views/icons/delete.png").resize((18, 18)))
+        self.find_icon = ImageTk.PhotoImage(Image.open("views/icons/find.png").resize((18, 18)))
+        self.clear_icon = ImageTk.PhotoImage(Image.open("views/icons/clear.png").resize((18, 18)))
+    def setup_styles(self):
+        style = ttk.Style()
+        style.theme_use("clam")
+        style.configure(
+            "Treeview",
+            font=("Segoe UI", 10),
+            rowheight=26,
+            background="white",
+            fieldbackground="white"
+        )
+        style.configure(
+            "Treeview.Heading",
+            font=("Segoe UI", 10, "bold"),
+            foreground="white",
+            background= "#1E88E5"
+        )
+        style.map("Treeview", background=[("selected", "#5D866C")])
+
+        self.btn_normal = {
+            "bg": "white",
+            "fg": "#3674B5",
+            "activebackground": "#E3F2FD",
+            "activeforeground": "#0D47A1",
+            "bd": 1,
+            "relief": "solid",
+            "highlightthickness": 0
+        }
     def create_widgets(self):
-    # frame chính, đặt nền cùng màu
-        mainframe = tk.Frame(self, bg="#578FCA")
-        mainframe.pack(fill="both", expand=True, padx=10, pady=10)
+    # frame chính
+        mainframe = tk.Frame(self, bg="white")
+        mainframe.pack(fill="both", expand=True, padx=10)
 
         mainframe.grid_columnconfigure(0, weight=8)
         mainframe.grid_columnconfigure(1, weight=2)
         mainframe.grid_rowconfigure(0, weight=1)
 
-        left_frame = tk.Frame(mainframe, bg="#A1E3F9")
-        left_frame.grid(row=0, column=0, sticky="nsew",padx=5,pady=10)
+        # LEFT FRAME
+        left_frame = tk.Frame(mainframe, bg="#1E88E5", bd=1, relief="solid")
+        left_frame.grid(row=0, column=0, rowspan=2, sticky="nsew", padx=5, pady=10)
         left_frame.grid_rowconfigure(2, weight=1)
         left_frame.grid_columnconfigure(0, weight=1)
-        # Left frame title
-        tk.Label(left_frame, text="University List", bg="#A1E3F9", fg="#3674B5",
-                font=("Arial", 16, "bold")).grid(row=0, column=0, columnspan=2, pady=5)
 
-        # Hàng trắng ngăn cách
-        tk.Frame(left_frame, bg="#578FCA", height=10).grid(row=1, column=0, columnspan=2, sticky="ew")
+        tk.Label(left_frame, text="🏫 University List", bg="#1E88E5", fg="white",
+                font=("Segoe UI", 12, "bold")).grid(row=0, column=0, columnspan=2, pady=5)
 
-        # Treeview
+        tk.Frame(left_frame, bg="white", height=3).grid(row=1, column=0, columnspan=2, sticky="ew")
+
         columns = ("id", "name", "city", "country", "address")
-        style = ttk.Style() 
-        style.theme_use("clam") 
-        style.configure("Treeview.Heading", background="#A1E3F9", foreground="#3674B5", font=("Arial", 10,"bold")) 
         self.tree = ttk.Treeview(left_frame, columns=columns, show="headings", height=20)
         headers = [
             ("id", "ID", 70),
-            ("name", "University Name", 200),
+            ("name", "University Name", 250),
             ("city", "City", 120),
             ("country", "Country", 100),
             ("address", "Address", 120),
@@ -66,52 +99,107 @@ class ManageUniversityWindow(tk.Toplevel):
         self.tree.configure(yscrollcommand=scroll.set)
         self.tree.bind("<<TreeviewSelect>>", self.on_select)
 
-
-
-        # ===================== FORM =====================
-        right_frame = tk.Frame(mainframe, bg="#A1E3F9")
-        right_frame.grid(row=0, column=1,padx=5,pady=10,sticky="nsew")   
-        tk.Label(right_frame, text="University Details",  bg="#A1E3F9", fg="#3674B5",
-        font=("Arial", 16, "bold")).grid(row=0, column=0, columnspan=2, pady=5)
+        # RIGHT FRAME (form)
+        right_frame = tk.Frame(mainframe, bg="white", bd=1, relief="solid")
+        right_frame.grid(row=0, column=1, padx=5, pady=10, sticky="nsew")
         right_frame.grid_columnconfigure(1, weight=1)
-        tk.Frame(right_frame, bg="#578FCA", height=10).grid(row=1, column=0, columnspan=2, sticky="ew")
+
+        # Heading riêng
+        heading = tk.Frame(right_frame, bg="#1E88E5")
+        heading.grid(row=0, column=0, columnspan=2, sticky="ew")
+        tk.Label(heading, text="✏️ University Details", bg="#1E88E5", fg="white",
+                font=("Segoe UI", 12, "bold")).pack(pady=5, fill="x")
+
+        tk.Frame(right_frame, bg="white", height=3).grid(row=1, column=0, columnspan=2, sticky="ew")
+
+        # Search
+        search_frame = tk.Frame(right_frame, bg="white")
+        search_frame.grid(row=2, column=0, columnspan=2, pady=10)
+        tk.Label(search_frame, text="Search", bg="white", fg="#3674B5",
+                font=("Arial", 10, "bold")).grid(row=0, column=0, sticky="w", pady=5)
+        self.search_var = tk.StringVar()
+        tk.Entry(search_frame, textvariable=self.search_var, width=25).grid(row=0, column=1, pady=5)
+        tk.Button(search_frame, text="Find", command=self.on_search,
+                image=self.find_icon, compound="left", width=60, **self.btn_normal).grid(row=0, column=2, padx=5, pady=2)
 
         # Country
-        tk.Label(right_frame, text="Country", bg="#A1E3F9", fg="#3674B5",font=("Arial", 10,"bold")).grid(row=2, column=0, sticky="e",pady=5)
+        tk.Label(right_frame, text="Country", bg="white", fg="#3674B5",
+                font=("Arial", 10, "bold")).grid(row=3, column=0, padx=(10,0), sticky="w", pady=5)
         self.country_var = tk.StringVar()
-        self.country_combo = ttk.Combobox(right_frame, textvariable=self.country_var, state="readonly", width=25)
-        self.country_combo.grid(row=2, column=1, padx=5,pady=5)
+        self.country_combo = ttk.Combobox(right_frame, textvariable=self.country_var, state="readonly", width=27)
+        self.country_combo.grid(row=3, column=1, padx=(5,10), pady=5)
         self.country_combo.bind("<<ComboboxSelected>>", self.on_country_changed)
 
         # City
-        tk.Label(right_frame, text="City", bg="#A1E3F9", fg="#3674B5",font=("Arial", 10,"bold")).grid(row=3, column=0, sticky="e",pady=5)
+        tk.Label(right_frame, text="City", bg="white", fg="#3674B5",
+                font=("Arial", 10, "bold")).grid(row=4, column=0, padx=(10,0), sticky="w", pady=5)
         self.city_var = tk.StringVar()
-        self.city_combo = ttk.Combobox(right_frame, textvariable=self.city_var, state="readonly", width=25)
-        self.city_combo.grid(row=3, column=1, padx=5,pady=5)
+        self.city_combo = ttk.Combobox(right_frame, textvariable=self.city_var, state="readonly", width=27)
+        self.city_combo.grid(row=4, column=1, padx=(5,10), pady=5)
 
         # University name
-        tk.Label(right_frame, text="University Name", bg="#A1E3F9", fg="#3674B5",font=("Arial", 10,"bold")).grid(row=4, column=0, sticky="e",pady=5)
+        tk.Label(right_frame, text="University", bg="white", fg="#3674B5",
+                font=("Arial", 10, "bold")).grid(row=5, column=0, padx=(10,0), sticky="w", pady=5)
         self.name_var = tk.StringVar()
-        tk.Entry(right_frame, textvariable=self.name_var, width=28).grid(row=4, column=1, padx=5,pady=5)
+        tk.Entry(right_frame, textvariable=self.name_var, width=30).grid(row=5, column=1, padx=(5,10), pady=5)
 
         # Address
-        tk.Label(right_frame, text="Address", bg="#A1E3F9", fg="#3674B5",font=("Arial", 10,"bold")).grid(row=5, column=0, sticky="e",pady=5)
+        tk.Label(right_frame, text="Address", bg="white", fg="#3674B5",
+                font=("Arial", 10, "bold")).grid(row=6, column=0, padx=(10,0), sticky="w", pady=5)
         self.addr_var = tk.StringVar()
-        tk.Entry(right_frame, textvariable=self.addr_var, width=28).grid(row=5, column=1, padx=5,pady=5)
-        
-        # Search
-        tk.Label(right_frame, text="Search", bg="#A1E3F9", fg="#3674B5",font=("Arial", 10,"bold")).grid(row=6, column=0, sticky="e",pady=5)
-        self.search_var = tk.StringVar()
-        tk.Entry(right_frame, textvariable=self.search_var, width=28).grid(row=6, column=1,pady=5)
-        
+        tk.Entry(right_frame, textvariable=self.addr_var, width=30).grid(row=6, column=1, padx=(5,10), pady=5)
+
         # Buttons
-        btns = tk.Frame(right_frame, bg="#A1E3F9")
-        btns.grid(row=7, column=0, columnspan=2, padx=20, pady=10)
-        tk.Button(btns, text="Add", command=self.on_add,bg="#3674B5",fg="white",width=7).grid(row=0, column=0, pady=2)
-        tk.Button(btns, text="Update", command=self.on_update,bg="#3674B5",fg="white",width=7).grid(row=0, column=1,padx=5,pady=2)
-        tk.Button(btns, text="Delete", command=self.on_delete,bg="#3674B5",fg="white",width=7).grid(row=0, column=2,padx=5,pady=2)
-        tk.Button(btns, text="Find", command=self.on_search,bg="#3674B5",fg="white",width=7).grid(row=1, column=0,padx=5,pady=2)
-        tk.Button(btns, text="Clear", command=self.clear_form,bg="#3674B5", fg="white", width=7).grid(row=1, column=1, padx=5, pady=2)
+        btns = tk.Frame(right_frame, bg="white")
+        btns.grid(row=7, column=0, columnspan=2, pady=10)
+        tk.Button(btns, text="Add", command=self.on_add, image=self.add_icon,compound="left", width=60, **self.btn_normal).grid(row=0, column=0, pady=2)
+        tk.Button(btns, text="Update", command=self.on_update, image=self.update_icon,compound="left", width=60, **self.btn_normal).grid(row=0, column=1, padx=3, pady=2)
+        tk.Button(btns, text="Delete", command=self.on_delete, image=self.delete_icon,compound="left", width=60, **self.btn_normal).grid(row=0, column=2, pady=2)
+        tk.Button(btns, text="Clear", command=self.clear_form,width=60,image=self.clear_icon,compound="left", **self.btn_normal).grid(row=0, column=3, padx=3, pady=2)
+
+        # ---- Summary Card: Total Universities ----
+        card_frame = tk.Frame(mainframe, bg="white", bd=1, relief="solid")
+        card_frame.grid(row=1, column=1, pady=5, sticky="n")
+
+        summary_card = tk.Frame(card_frame, width=280, height=140, bd=0, relief="flat")
+        summary_card.pack()
+        summary_card.pack_propagate(False)
+
+        # Background image hoặc màu nền
+        try:
+            bg_img = Image.open("views/images/university.png").resize((280, 140))
+            self.uni_card_bg = ImageTk.PhotoImage(bg_img)
+            tk.Label(summary_card, image=self.uni_card_bg, bd=0).place(x=0, y=0)
+        except:
+            summary_card.configure(bg="#3674B5")
+            tk.Label(summary_card, bg="#3674B5").place(x=0, y=0, relwidth=1, relheight=1)
+
+        # Lấy tổng số University
+        try:
+            total_universities = len(self.controller.get_all_universities())
+        except:
+            total_universities = 0
+
+        # Số lượng hiển thị lớn
+        self.uni_count_label = tk.Label(
+            summary_card,
+            text=str(total_universities),
+            font=("Segoe UI", 32, "bold"),
+            fg="#3674B5",          # chữ trắng nổi bật
+            bg=summary_card["bg"]          # nền xanh đồng bộ
+        )
+        self.uni_count_label.place(x=20, y=30)
+
+        # Text mô tả
+        tk.Label(
+            summary_card,
+            text="Total Universities",
+            font=("Segoe UI", 12, "bold"),
+            fg="#3674B5",
+            bg=summary_card["bg"] 
+        ).place(x=20, y=85)
+
+
     def load_countries(self):
         countries = self.controller.get_countries()
         values = [c["name"] for c in countries]
@@ -208,25 +296,37 @@ class ManageUniversityWindow(tk.Toplevel):
         if not uid:
             messagebox.showwarning("Warning", "Please select a university to update!")
             return
+        new_name = self.name_var.get().strip()
+        new_city_name = self.city_var.get().strip()
+        new_addr = self.addr_var.get().strip() or None
 
-        name = self.name_var.get().strip()
-        city_name = self.city_var.get().strip()
-        if not name:
+        if not new_name:
             messagebox.showwarning("Input Error", "University name is required!")
             return
-        if not city_name:
+        if not new_city_name:
             messagebox.showwarning("Input Error", "Please select a city!")
             return
 
-        city_id = self.city_map.get(city_name)
-        if not city_id:
+        new_city_id = self.city_map.get(new_city_name)
+        if not new_city_id:
             messagebox.showerror("Error", "Invalid city selected!")
             return
 
-        self.controller.update_university(uid, name, city_id, self.addr_var.get().strip() or None)
+        old_item = self.controller.get_university(uid)  
+        old_name = old_item["name"]
+        old_city_id = old_item["city_id"]
+        old_addr = old_item["address"]
+        if (
+            new_name == old_name and 
+            new_city_id == old_city_id and
+            (new_addr or "") == (old_addr or "")
+        ):
+            messagebox.showinfo("No Change", "No changes detected to update.")
+            return
+        self.controller.update_university(uid, new_name, new_city_id, new_addr)
         self.refresh_list()
         self.clear_form()
-        messagebox.showinfo("Success", "University updated successfully!")                    
+        messagebox.showinfo("Success", "University updated successfully!")
 
     def on_delete(self):
         uid = self.selected_id()

@@ -224,3 +224,29 @@ class StudyCostModel(BaseModel):
             GROUP BY p.level
         """
         return self.execute_query(query, (country_id,), fetchall=True)
+    def get_all_study_costs(self):
+        query = """
+            SELECT 
+                s.id,
+                u.name AS university,
+                ci.name AS city,
+                c.name AS country,
+                CONCAT(p.name, ' (', p.level, ')') AS program,
+                p.level,
+                s.duration_years,
+                s.tuition_usd,
+                s.living_cost_index,
+                s.rent_usd,
+                s.visa_fee_usd,
+                s.insurance_usd,
+                s.exchange_rate,
+                s.university_id,
+                s.program_id
+            FROM study_costs s
+            JOIN universities u ON s.university_id = u.id
+            JOIN cities ci ON u.city_id = ci.id
+            JOIN countries c ON ci.country_id = c.id
+            JOIN programs p ON s.program_id = p.id
+            ORDER BY c.name, ci.name, u.name, p.name
+        """
+        return self.execute_query(query, fetchall=True)

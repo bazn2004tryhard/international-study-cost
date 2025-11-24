@@ -12,7 +12,11 @@ class ProgramController:
         return self.model.create_program(name, level)
 
     def update_program(self, program_id, name=None, level=None):
-        return self.model.update_program(program_id, name, level)
+        return self.model.update_program(
+            program_id,
+            name=name,
+            level=level
+        )
 
     def delete_program(self, program_id):
         return self.model.delete_program(program_id)

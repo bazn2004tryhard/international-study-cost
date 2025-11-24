@@ -284,7 +284,8 @@ class ManageCountryWindow(tk.Toplevel):
             self.currency_var.get()
         )
         self.refresh_list()
-
+        self.reset_entry()
+        
     def on_update(self):
         cid = self.selected_id()
         if not cid:

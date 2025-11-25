@@ -129,7 +129,7 @@ class MainView(tk.Frame):
     def set_countries(self, country_list):
         names = [c["name"] for c in country_list]
         self.country_combo["values"] = names
-        if names:
+        if names and self.controller:
             self.country_combo.current(0)
             # load luôn country đầu tiên
             if self.controller:

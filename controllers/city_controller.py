@@ -3,7 +3,7 @@ from models.country_model import CountryModel
 
 
 class CityController:
-    def __init__(self, main_controller=None):
+    def __init__(self):
         self.model = CityModel()
         self.country_model = CountryModel()
 
@@ -14,7 +14,12 @@ class CityController:
         return self.model.create_city(name, country_id, city_code)
 
     def update_city(self, city_id, name=None, country_id=None, city_code=None):
-        return self.model.update_city(city_id, name=name, country_id=country_id, city_code=city_code)
+        return self.model.update_city(
+            city_id,
+            name=name,
+            country_id=country_id,
+            city_code=city_code
+        )
 
     def delete_city(self, city_id):
         return self.model.delete_city(city_id)
@@ -25,15 +30,15 @@ class CityController:
             return rows
 
         def match(row):
-            matches_keyword = True
+            by_keyword = True
             if keyword:
-                matches_keyword = keyword.lower() in row["city"].lower()
+                by_keyword = keyword.lower() in row["city"].lower()
 
-            matches_country = True
+            by_country = True
             if country_id:
-                matches_country = row["country_id"] == country_id
+                by_country = row["country_id"] == country_id
 
-            return matches_keyword and matches_country
+            return by_keyword and by_country
 
         return [row for row in rows if match(row)]
 

@@ -12,12 +12,18 @@ class UniversityController:
     def get_all_universities(self):
         return self.model.get_all_universities()
 
+    def get_university(self, university_id):
+        return self.model.get_university_by_id(university_id)
+
     def add_university(self, name, city_id, address=None):
         return self.model.create_university(name, city_id, address)
 
     def update_university(self, university_id, name=None, city_id=None, address=None):
         return self.model.update_university(
-            university_id, name=name, city_id=city_id, address=address
+            university_id,
+            name=name,
+            city_id=city_id,
+            address=address
         )
 
     def delete_university(self, university_id):

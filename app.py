@@ -12,6 +12,9 @@ def main():
     main_view = MainView(root, controller=None)
     controller = MainController(main_view)
     main_view.controller = controller
+    # Load initial data after controller is set
+    if main_view.country_combo["values"]:
+        controller.on_country_changed(main_view.country_combo["values"][0])
 
     root.mainloop()
 

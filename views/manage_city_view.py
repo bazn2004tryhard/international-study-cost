@@ -272,11 +272,6 @@ class ManageCityWindow(tk.Toplevel):
     # ------------------------------------------------------
     # CRUD
     # ------------------------------------------------------
-    def check_entry(self):
-        if not self.city_var.get().strip() or not self.country_id_var.get().strip():
-            messagebox.showwarning("Warning", "All fields are required")
-            return False
-        return True
         
     def on_add(self):
         if not self.check_entry():
@@ -309,10 +304,15 @@ class ManageCityWindow(tk.Toplevel):
         cid = self.selected_id()
         if not cid:
             return messagebox.showwarning("Warning", "Select an item first")
-        self.controller.delete_city(cid)
-        self.refresh_list()
-        self.reset_entry()
-        messagebox.showinfo("Success", "City deleted successfully!")
+        # Hiển thị hộp thoại xác nhận
+        if messagebox.askyesno("Confirm", "Are you sure you want to delete this city?"):
+            success = self.controller.delete_city(cid)
+            if success:
+                messagebox.showinfo("Success", "City deleted successfully")
+                self.refresh_list()
+                self.reset_entry()
+            else:
+                messagebox.showerror("Error", "Failed to delete city")
 
     def reset_entry(self):
         self.city_var.set("")
@@ -329,3 +329,23 @@ class ManageCityWindow(tk.Toplevel):
                 values=(r["id"], r["city"], r["country_id"], r["city_code"]),
                 tags=(tag,)
             )
+# ------------------------------------------------------
+# VALIDATE
+# ------------------------------------------------------
+    def check_entry(self):
+        # Kiểm tra các trường không rỗng
+        if not self.city_var.get().strip() or not self.country_id_var.get().strip() or not self.city_code_var.get().strip():
+            messagebox.showwarning("Warning", "All fields are required")
+            return False
+
+        # Kiểm tra country_id là số
+        if not self.country_id_var.get().isdigit():
+            messagebox.showwarning("Warning", "Country ID must be a number")
+            return False
+
+        # Kiểm tra city_code là số
+        if not self.city_code_var.get().isdigit():
+            messagebox.showwarning("Warning", "City Code must be a number")
+            return False
+
+        return True

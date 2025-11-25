@@ -277,6 +277,8 @@ class ManageCountryWindow(tk.Toplevel):
     # CRUD
     # ------------------------------------------------------
     def on_add(self):
+        if not self.validate_input():
+            return 
         self.controller.add_country(
             self.name_var.get(),
             self.code_var.get(),
@@ -285,6 +287,7 @@ class ManageCountryWindow(tk.Toplevel):
         )
         self.refresh_list()
         self.reset_entry()
+        messagebox.showinfo("Success", "Country added successfully")
         
     def on_update(self):
         cid = self.selected_id()
@@ -303,10 +306,15 @@ class ManageCountryWindow(tk.Toplevel):
         cid = self.selected_id()
         if not cid:
             return messagebox.showwarning("Warning", "Select an item first")
-        self.controller.delete_country(cid)
-        self.refresh_list()
-        self.reset_entry()
-
+        # Hiển thị hộp thoại xác nhận
+        if messagebox.askyesno("Confirm", "Are you sure you want to delete this country?"):
+            success = self.controller.delete_country(cid)
+            if success:
+                messagebox.showinfo("Success", "Country deleted successfully")
+                self.refresh_list()
+                self.reset_entry()
+            else:
+                messagebox.showerror("Error", "Failed to delete country")
     def reset_entry(self):
         self.name_var.set("")
         self.code_var.set("")
@@ -323,3 +331,26 @@ class ManageCountryWindow(tk.Toplevel):
                 values=(r["id"], r["name"], r["country_code"], r["population"], r["currency"]),
                 tags=(tag,)
             )
+    def validate_input(self):
+        name = self.name_var.get().strip()
+        code = self.code_var.get().strip()
+        population = self.population_var.get().strip()
+        currency = self.currency_var.get().strip()
+
+        # Kiểm tra rỗng
+        if not name or not code or not population or not currency:
+            messagebox.showwarning("Warning", "All fields are required")
+            return False
+
+        # Kiểm tra code, population, currency là số
+        if not code.isdigit():
+            messagebox.showwarning("Warning", "Code must be a number")
+            return False
+        if not population.isdigit():
+            messagebox.showwarning("Warning", "Population must be a number")
+            return False
+        if not currency.isdigit():
+            messagebox.showwarning("Warning", "Currency must be a number")
+            return False
+
+        return True

@@ -3,7 +3,7 @@ from tkinter import ttk, messagebox
 from PIL import Image, ImageTk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-
+from resource_utils import resource_path   # 🔥 Quan trọng
 
 class MainView(tk.Frame):
     def __init__(self, master, controller, *args, **kwargs):
@@ -22,7 +22,7 @@ class MainView(tk.Frame):
         self.create_scroll_main()
 
     # ============================================================
-    # STYLE + ICONS
+    # STYLES
     # ============================================================
     def setup_styles(self):
         style = ttk.Style()
@@ -52,9 +52,15 @@ class MainView(tk.Frame):
                         font=("Segoe UI", 10, "bold"),
                         foreground="#3674B5", background="white")
 
+    # ============================================================
+    # ICONS (ĐÃ SỬA — DÙNG resource_path)
+    # ============================================================
     def load_icons(self):
         def icon(path, size):
-            return ImageTk.PhotoImage(Image.open(path).resize(size, Image.Resampling.LANCZOS))
+            full = resource_path(path)
+            return ImageTk.PhotoImage(
+                Image.open(full).resize(size, Image.Resampling.LANCZOS)
+            )
 
         self.icons = {
             "country": icon("views/icons/country.png", (24, 24)),
@@ -63,7 +69,7 @@ class MainView(tk.Frame):
             "program": icon("views/icons/setting.png", (24, 24)),
             "study": icon("views/icons/money.png", (24, 24)),
             "chart": icon("views/icons/chart.png", (20, 20)),
-            "find": icon("views/icons/find.png", (20, 20))
+            "find": icon("views/icons/find.png", (20, 20)),
         }
 
     # ============================================================
@@ -79,7 +85,8 @@ class MainView(tk.Frame):
         ttk.Label(left, text="🌍", style="Header.TLabel").pack(side="left")
         ttk.Label(left, text=" International Study Costs", style="Header.TLabel").pack(side="left", padx=8)
 
-        ttk.Label(header, text="Dashboard", style="Header.TLabel", font=("Segoe UI", 10)).pack(side="right", padx=16)
+        ttk.Label(header, text="Dashboard", style="Header.TLabel",
+                  font=("Segoe UI", 10)).pack(side="right", padx=16)
 
     # ============================================================
     # ADMIN TOOLBAR
@@ -104,13 +111,13 @@ class MainView(tk.Frame):
                        ).grid(row=0, column=i, sticky="nsew", padx=4)
 
     # ============================================================
-    # CONTROLS (Country + Chart)
+    # CONTROLS
     # ============================================================
     def create_controls(self):
         frame = ttk.Frame(self, style="Card.TFrame", padding=12)
         frame.pack(fill="x")
 
-        # ----- Country -----
+        # Country
         cf = ttk.Frame(frame, style="Card.TFrame")
         cf.grid(row=0, column=0, padx=8, sticky="w")
 
@@ -124,7 +131,7 @@ class MainView(tk.Frame):
         self.country_combo.grid(row=0, column=1)
         self.country_combo.bind("<<ComboboxSelected>>", self.on_country_selected)
 
-        # ----- Chart -----
+        # Chart
         ch = ttk.Frame(frame, style="Card.TFrame")
         ch.grid(row=0, column=1, padx=8, sticky="w")
 
@@ -145,7 +152,6 @@ class MainView(tk.Frame):
         self.chart_combo.grid(row=0, column=1)
         self.chart_combo.current(0)
 
-        # ----- Show button -----
         ttk.Button(frame, text="Show", image=self.icons["find"], compound="left",
                    style="Accent.TButton",
                    command=self.on_show_chart_clicked
@@ -155,7 +161,7 @@ class MainView(tk.Frame):
         frame.grid_columnconfigure(1, weight=1)
 
     # ============================================================
-    # MAIN SCROLLING AREA (Everything below)
+    # SCROLLING LAYOUT
     # ============================================================
     def create_scroll_main(self):
         outer = ttk.Frame(self)
@@ -176,7 +182,6 @@ class MainView(tk.Frame):
         canvas.bind("<Configure>",
                     lambda e: canvas.itemconfig(window, width=e.width))
 
-        # scroll with mouse
         canvas.bind_all("<MouseWheel>",
                         lambda e: canvas.yview_scroll(int(-1 * (e.delta / 120)), "units"))
 
@@ -217,7 +222,11 @@ class MainView(tk.Frame):
 
         for c in cols:
             self.tree.heading(c, text=headers[c])
-            self.tree.column(c, width = 200 if c == "university" else (60 if c == "id" or c == "rent" or c == "tuition" else 120), anchor="w")
+            self.tree.column(
+                c,
+                width=200 if c == "university" else 120,
+                anchor="w"
+            )
 
         scroll = ttk.Scrollbar(frame, orient="vertical", command=self.tree.yview)
         self.tree.configure(yscrollcommand=scroll.set)
@@ -231,13 +240,12 @@ class MainView(tk.Frame):
 
         def _on_mousewheel(event):
             self.tree.yview_scroll(int(-1*(event.delta/120)), "units")
-            return "break"   # NGĂN cuộn ra ngoài
+            return "break"
 
-        # Windows
         self.tree.bind("<MouseWheel>", _on_mousewheel)
 
     # ============================================================
-    # CHART
+    # CHART AREA
     # ============================================================
     def add_chart_section(self):
         label_frame = ttk.Frame(self.scroll_frame, style="Card.TFrame", padding=12)
@@ -258,7 +266,7 @@ class MainView(tk.Frame):
         self.chart_canvas.get_tk_widget().pack(fill="both", expand=True)
 
     # ============================================================
-    # TREE + CHART UPDATE
+    # DATA UPDATERS
     # ============================================================
     def set_countries(self, lst):
         names = [c["name"] for c in lst]

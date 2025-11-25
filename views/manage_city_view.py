@@ -1,7 +1,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox
 from PIL import ImageTk, Image
-
+from resource_utils import resource_path   # 🔥 dùng file helper chung
 
 class ManageCityWindow(tk.Toplevel):
     def __init__(self, master, controller):
@@ -17,17 +17,25 @@ class ManageCityWindow(tk.Toplevel):
         self.create_widgets()
         self.refresh_list()
 
-
     # ------------------------------------------------------
-    # LOAD ICONS
+    # LOAD ICONS  (ĐÃ SỬA DÙNG resource_path)
     # ------------------------------------------------------
     def load_icons(self):
-        self.add_icon = ImageTk.PhotoImage(Image.open("views/icons/add.png").resize((18, 18)))
-        self.update_icon = ImageTk.PhotoImage(Image.open("views/icons/update.png").resize((18, 18)))
-        self.delete_icon = ImageTk.PhotoImage(Image.open("views/icons/delete.png").resize((18, 18)))
-        self.find_icon = ImageTk.PhotoImage(Image.open("views/icons/find.png").resize((18, 18)))
-        self.country_icon = ImageTk.PhotoImage(Image.open("views/icons/country.png").resize((18, 18)))
-
+        self.add_icon = ImageTk.PhotoImage(
+            Image.open(resource_path("views/icons/add.png")).resize((18, 18))
+        )
+        self.update_icon = ImageTk.PhotoImage(
+            Image.open(resource_path("views/icons/update.png")).resize((18, 18))
+        )
+        self.delete_icon = ImageTk.PhotoImage(
+            Image.open(resource_path("views/icons/delete.png")).resize((18, 18))
+        )
+        self.find_icon = ImageTk.PhotoImage(
+            Image.open(resource_path("views/icons/find.png")).resize((18, 18))
+        )
+        self.country_icon = ImageTk.PhotoImage(
+            Image.open(resource_path("views/icons/country.png")).resize((18, 18))
+        )
 
     # ------------------------------------------------------
     # STYLES
@@ -48,7 +56,7 @@ class ManageCityWindow(tk.Toplevel):
             "Treeview.Heading",
             font=("Segoe UI", 10, "bold"),
             foreground="white",
-            background= "#3674B5"
+            background="#3674B5"
         )
         style.map("Treeview", background=[("selected", "#BBDEFB")])
 
@@ -63,7 +71,6 @@ class ManageCityWindow(tk.Toplevel):
             "highlightthickness": 0
         }
 
-
     # ------------------------------------------------------
     # UI
     # ------------------------------------------------------
@@ -75,7 +82,6 @@ class ManageCityWindow(tk.Toplevel):
 
         main_frame.grid_columnconfigure(0, weight=2)  # bảng
         main_frame.grid_columnconfigure(1, weight=1)  # form + card
-
 
         # --------------------------------------------------
         # BẢNG + TIÊU ĐỀ + VIỀN
@@ -129,7 +135,6 @@ class ManageCityWindow(tk.Toplevel):
             return "break"
         self.tree.bind("<MouseWheel>", _on_mousewheel)
 
-
         # --------------------------------------------------
         # FORM (row=0, col=1)
         # --------------------------------------------------
@@ -161,7 +166,6 @@ class ManageCityWindow(tk.Toplevel):
             command=self.on_search, width=120, **self.btn_normal
         ).grid(row=1, column=0, columnspan=2, pady=10)
 
-
         # ---- Input fields ----
         self.city_var = tk.StringVar()
         self.country_id_var = tk.StringVar()
@@ -183,14 +187,13 @@ class ManageCityWindow(tk.Toplevel):
         btn_frame.grid(row=10, column=0, columnspan=2, pady=20)
 
         tk.Button(btn_frame, text=" Add", image=self.add_icon, compound="left",
-                width=110, command=self.on_add, **self.btn_normal).pack(side="left", padx=5)
+                  width=110, command=self.on_add, **self.btn_normal).pack(side="left", padx=5)
 
         tk.Button(btn_frame, text=" Update", image=self.update_icon, compound="left",
-                width=110, command=self.on_update, **self.btn_normal).pack(side="left", padx=5)
+                  width=110, command=self.on_update, **self.btn_normal).pack(side="left", padx=5)
 
         tk.Button(btn_frame, text=" Delete", image=self.delete_icon, compound="left",
-                width=110, command=self.on_delete, **self.btn_normal).pack(side="left", padx=5)
-
+                  width=110, command=self.on_delete, **self.btn_normal).pack(side="left", padx=5)
 
         # --------------------------------------------------
         # CARD TỔNG SỐ City (row=1, col=1)
@@ -198,22 +201,22 @@ class ManageCityWindow(tk.Toplevel):
         card_frame = tk.Frame(main_frame, bg="white")
         card_frame.grid(row=1, column=1, sticky="n", pady=(10, 0))
 
-        summary_card = tk.Frame(card_frame, width=300, height=150, bd=0, relief="flat", bg = None)
+        summary_card = tk.Frame(card_frame, width=300, height=150, bd=0, relief="flat", bg=None)
         summary_card.pack()
 
         # ---- Background image ----
         try:
-            bg_img = Image.open("views/images/city.jpg").resize((300, 150))
+            bg_img = Image.open(resource_path("views/images/city.jpg")).resize((300, 150))
             self.card_bg = ImageTk.PhotoImage(bg_img)
             tk.Label(summary_card, image=self.card_bg, bd=0).place(x=0, y=0)
-        except:
+        except Exception:
             summary_card.configure(bg="#1E88E5")
             tk.Label(summary_card, bg="#1E88E5").place(x=0, y=0, relwidth=1, relheight=1)
 
         # ---- Total cities ----
         try:
             total = len(self.controller.get_all_cities())
-        except:
+        except Exception:
             total = 0
 
         tk.Label(
@@ -224,7 +227,6 @@ class ManageCityWindow(tk.Toplevel):
             bg="#7C7E7C"
         ).place(x=20, y=30)
 
-        # ---- Text: Total Countries ----
         tk.Label(
             summary_card,
             text="Total Cities",
@@ -232,8 +234,6 @@ class ManageCityWindow(tk.Toplevel):
             fg="white",
             bg="#7C7E7C",
         ).place(x=20, y=85)
-        # --------------------------------------------------
-
 
     # ------------------------------------------------------
     # DATA
@@ -249,7 +249,6 @@ class ManageCityWindow(tk.Toplevel):
                 tags=(tag,)
             )
 
-
     def on_select(self, event):
         sel = self.tree.selection()
         if not sel:
@@ -261,18 +260,15 @@ class ManageCityWindow(tk.Toplevel):
         self.country_id_var.set(country_id)
         self.city_code_var.set(city_code)
 
-
     def selected_id(self):
         sel = self.tree.selection()
         if not sel:
             return None
         return self.tree.item(sel[0])["values"][0]
 
-
     # ------------------------------------------------------
     # CRUD
     # ------------------------------------------------------
-        
     def on_add(self):
         if not self.check_entry():
             return
@@ -304,7 +300,6 @@ class ManageCityWindow(tk.Toplevel):
         cid = self.selected_id()
         if not cid:
             return messagebox.showwarning("Warning", "Select an item first")
-        # Hiển thị hộp thoại xác nhận
         if messagebox.askyesno("Confirm", "Are you sure you want to delete this city?"):
             success = self.controller.delete_city(cid)
             if success:
@@ -329,21 +324,19 @@ class ManageCityWindow(tk.Toplevel):
                 values=(r["id"], r["city"], r["country_id"], r["city_code"]),
                 tags=(tag,)
             )
-# ------------------------------------------------------
-# VALIDATE
-# ------------------------------------------------------
+
+    # ------------------------------------------------------
+    # VALIDATE
+    # ------------------------------------------------------
     def check_entry(self):
-        # Kiểm tra các trường không rỗng
         if not self.city_var.get().strip() or not self.country_id_var.get().strip() or not self.city_code_var.get().strip():
             messagebox.showwarning("Warning", "All fields are required")
             return False
 
-        # Kiểm tra country_id là số
         if not self.country_id_var.get().isdigit():
             messagebox.showwarning("Warning", "Country ID must be a number")
             return False
 
-        # Kiểm tra city_code là số
         if not self.city_code_var.get().isdigit():
             messagebox.showwarning("Warning", "City Code must be a number")
             return False

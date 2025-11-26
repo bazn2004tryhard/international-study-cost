@@ -9,6 +9,7 @@ class ManageStudyCostWindow(tk.Toplevel):
         self.controller = controller
         self.title("Manage Study Costs")
         self.geometry("1400x700")
+        #self.resizable(False, False) #khong cho keo full man hinh
         self.configure(bg="white")
         self.focus_set()
 

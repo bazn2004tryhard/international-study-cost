@@ -10,6 +10,7 @@ class ManageUniversityWindow(tk.Toplevel):
         self.controller = controller
         self.title("Manage University")
         self.geometry("990x600")
+        self.resizable(False, False) #khong cho keo full man hinh
         self.focus_set()
         self.configure(bg="white")
 

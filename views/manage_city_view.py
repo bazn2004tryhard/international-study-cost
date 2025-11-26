@@ -9,6 +9,7 @@ class ManageCityWindow(tk.Toplevel):
         self.controller = controller
         self.title("Manage City")
         self.geometry("980x540")
+        self.resizable(False, False) #khong cho keo full man hinh
         self.configure(bg="white")
 
         self.load_icons()
@@ -312,6 +313,8 @@ class ManageCityWindow(tk.Toplevel):
                 messagebox.showerror("Lỗi không xác định", f"Không thể thêm thành phố:\n{error_msg}", parent=self)
 
     def on_update(self):
+        if not self.check_entry():
+            return
         cid = self.selected_id()
         if not cid:
             messagebox.showwarning("Warning", "Vui lòng chọn một thành phố để cập nhật!", parent=self)

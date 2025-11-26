@@ -178,7 +178,7 @@ class ManageProgramWindow(tk.Toplevel):
             bg="white",
             fg="#3674B5",
             font=("Arial", 10, "bold")
-        ).grid(row=3, column=0, padx=(10, 0), sticky="w", pady=5)
+        ).grid(row=3, column=0, padx=(10, 0), sticky="e", pady=5)
         self.name_var = tk.StringVar()
         tk.Entry(right_frame, textvariable=self.name_var, width=28).grid(
             row=3, column=1, padx=(5, 10), pady=5
@@ -191,9 +191,10 @@ class ManageProgramWindow(tk.Toplevel):
             bg="white",
             fg="#3674B5",
             font=("Arial", 10, "bold")
-        ).grid(row=4, column=0, padx=(10, 0), sticky="w", pady=5)
+        ).grid(row=4, column=0, padx=(10, 0), sticky="e", pady=5)
         self.level_var = tk.StringVar()
-        self.level_combo = ttk.Combobox(right_frame, textvariable=self.level_var, width=25)
+        self.levels = ["Bachelor", "Master", "PhD"]
+        self.level_combo = ttk.Combobox(right_frame, textvariable=self.level_var,values=self.levels, state="normal", width=25)
         self.level_combo.grid(row=4, column=1, padx=(5, 10), pady=5)
 
         # Buttons
@@ -319,66 +320,88 @@ class ManageProgramWindow(tk.Toplevel):
     def on_add(self):
         name = self.name_var.get().strip()
         level = self.level_var.get().strip()
+
         if not name or not level:
-            messagebox.showwarning("Input Error", "Program name/Level is required!")
+            messagebox.showwarning("Thiếu thông tin", "Tên chương trình và Level là bắt buộc!", parent=self)
             return
+
         try:
             self.controller.add_program(name, level)
-            messagebox.showinfo("Success", f"Program added:\n{name}")
+
+            # Nếu level mới, thêm vào combobox
+            if level not in self.levels:
+                self.levels.append(level)
+                self.level_combo['values'] = self.levels
+
             self.refresh_list()
+            self.update_total_count()
             self.clear_form()
+            self.focus_set()
+            messagebox.showinfo("Thành công", f"Đã thêm chương trình:\n{name}", parent=self)
         except Exception as e:
-            messagebox.showerror("Error", str(e))
+            messagebox.showerror("Lỗi", str(e), parent=self)
+
 
     def on_update(self):
         pid = self.selected_id()
         if not pid:
-            messagebox.showwarning("Warning", "Please select a program to update!")
+            messagebox.showwarning("Cảnh báo", "Vui lòng chọn một chương trình để cập nhật!", parent=self)
             return
+
         new_name = self.name_var.get().strip()
         new_level = self.level_var.get().strip()
 
         if not new_name or not new_level:
-            messagebox.showwarning("Input Error", "Program name/Level is required!")
+            messagebox.showwarning("Lỗi nhập liệu", "Tên chương trình/Level là bắt buộc!", parent=self)
             return
 
-        old_item = self.controller.get_program(pid)
+        old_item = self.controller.model.get_program_by_id(pid)
+
+        if not old_item:
+            messagebox.showerror("Lỗi", "Không tìm thấy chương trình!", parent=self)
+            return
+
         old_name = old_item["name"]
         old_level = old_item["level"]
+
         if new_name == old_name and new_level == old_level:
-            messagebox.showinfo("No Change", "No changes detected to update.")
+            messagebox.showinfo("Không thay đổi", "Không có thay đổi nào để cập nhật.", parent=self)
             return
+
         self.controller.update_program(pid, new_name, new_level)
         self.refresh_list()
         self.clear_form()
-        messagebox.showinfo("Success", "Program updated successfully!")
+        self.update_total_count()
+
+        messagebox.showinfo("Thành công", "Cập nhật chương trình thành công!", parent=self)
+        self.focus_set()
+
 
     def on_delete(self):
         pid = self.selected_id()
         if not pid:
-            messagebox.showwarning("Warning", "Please select a program to delete!")
+            messagebox.showwarning("Cảnh báo", "Vui lòng chọn một chương trình để xóa!", parent=self)
             return
+
         if messagebox.askyesno(
-            "Confirm",
-            "Are you sure you want to delete this program?\nAssociated study fees will also be deleted!"
+            "Xác nhận xóa",
+            "Bạn có chắc chắn muốn xóa chương trình này?\nCác chi phí học liên quan cũng sẽ bị xóa!",
+            parent=self
         ):
             self.controller.delete_program(pid)
             self.refresh_list()
             self.clear_form()
-            messagebox.showinfo("Success", "Program deleted successfully!")
+            self.update_total_count()   
+            messagebox.showinfo("Thành công", "Xóa chương trình thành công!", parent=self)
+            self.focus_set()
 
     def on_search(self):
-        keyword = self.search_var.get().strip().lower()
+        keyword = self.search_var.get().strip()
         if not keyword:
             self.refresh_list()
             return
 
-        all_programs = self.controller.get_all_programs()
-        filtered = []
-        for r in all_programs:
-            if (keyword in r["name"].lower() or
-                    keyword in r["level"].lower()):
-                filtered.append(r)
+        filtered = self.controller.search_program(keyword=keyword)
 
         self.tree.delete(*self.tree.get_children())
         for i, r in enumerate(filtered):
@@ -389,6 +412,13 @@ class ManageProgramWindow(tk.Toplevel):
                 values=(r["id"], r["name"], r["level"]),
                 tags=(tag,)
             )
+
+    def update_total_count(self):
+        try:
+            total = len(self.controller.get_all_programs())
+            self.program_count_label.config(text=str(total))
+        except Exception:
+            self.program_count_label.config(text="0")
 
     def clear_form(self):
         self.name_var.set("")

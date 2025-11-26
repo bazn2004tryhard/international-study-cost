@@ -9,6 +9,7 @@ class ManageCountryWindow(tk.Toplevel):
         self.controller = controller
         self.title("Manage Country")
         self.geometry("980x540")
+        self.resizable(False, False) #khong cho keo full man hinh
         self.configure(bg="white")
 
         self.load_icons()

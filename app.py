@@ -19,7 +19,8 @@ def resource_path(relative_path):
 def main():
     root = tk.Tk()
     root.title("International Study Cost Comparison")
-    root.geometry("1000x600")
+    
+    root.state("zoomed")  # mở window full màn hình
 
     # tạo view trước, rồi inject controller
     main_view = MainView(root, controller=None)

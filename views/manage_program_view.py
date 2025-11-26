@@ -9,6 +9,7 @@ class ManageProgramWindow(tk.Toplevel):
         self.controller = controller
         self.title("Manage Programs")
         self.geometry("850x600")
+        self.resizable(False, False) #khong cho keo full man hinh
         self.configure(bg="white")
         self.focus_set()
 

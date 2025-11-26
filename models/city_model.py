@@ -47,6 +47,15 @@ class CityModel(BaseModel):
         """
         return self.execute_query(query, (country_id,), fetchall=True)
 
+    def city_exists(self, name, country_id):
+        """Check if city with same name and country_id already exists"""
+        query = """
+            SELECT id FROM cities 
+            WHERE name = %s AND country_id = %s
+        """
+        result = self.execute_query(query, (name, country_id), fetchone=True)
+        return result is not None
+
     # ============================================================
     # CREATE
     # ============================================================

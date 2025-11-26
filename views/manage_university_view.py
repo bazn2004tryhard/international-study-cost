@@ -408,25 +408,28 @@ class ManageUniversityWindow(tk.Toplevel):
 
         try:
             self.controller.add_university(name, city_id, address)
-            messagebox.showinfo("Thành công", f"Đã thêm trường:\n{name}")
             self.refresh_list()
+            self.update_total_count()
             self.clear_form()
+            self.focus_set()
+            messagebox.showinfo("Thành công", f"Đã thêm trường:\n{name}", parent=self)
         except IntegrityError as e:
             if e.errno == 1062:
                 messagebox.showerror(
                     "Đã tồn tại",
-                    f"Trường '{name}' đã có trong thành phố '{city_name}'!\nKhông thể thêm trùng."
+                    f"Trường '{name}' đã có trong thành phố '{city_name}'!\nKhông thể thêm trùng.",
+                    parent=self
                 )
             else:
-                messagebox.showerror("Lỗi CSDL", str(e))
+                messagebox.showerror("Lỗi CSDL", str(e), parent=self)
         except Exception as e:
-            messagebox.showerror("Lỗi không xác định", str(e))
+            messagebox.showerror("Lỗi không xác định", str(e), parent=self)
 
     def on_update(self):
         uid = self.selected_id()
         if not uid:
             messagebox.showwarning(
-                "Warning", "Please select a university to update!"
+                "Warning", "Vui lòng chọn một trường đại học để cập nhật!", parent=self
             )
             return
 
@@ -435,15 +438,15 @@ class ManageUniversityWindow(tk.Toplevel):
         new_addr = self.addr_var.get().strip() or None
 
         if not new_name:
-            messagebox.showwarning("Input Error", "University name is required!")
+            messagebox.showwarning("Input Error", "University name is required!", parent=self)
             return
         if not new_city_name:
-            messagebox.showwarning("Input Error", "Please select a city!")
+            messagebox.showwarning("Input Error", "Please select a city!", parent=self)
             return
 
         new_city_id = self.city_map.get(new_city_name)
         if not new_city_id:
-            messagebox.showerror("Error", "Invalid city selected!")
+            messagebox.showerror("Error", "Invalid city selected!", parent=self)
             return
 
         old_item = self.controller.get_university(uid)
@@ -456,13 +459,20 @@ class ManageUniversityWindow(tk.Toplevel):
             and new_city_id == old_city_id
             and (new_addr or "") == (old_addr or "")
         ):
-            messagebox.showinfo("No Change", "No changes detected to update.")
+            messagebox.showinfo("No Change", "No changes detected to update.", parent=self)
             return
 
-        self.controller.update_university(uid, new_name, new_city_id, new_addr)
-        self.refresh_list()
-        self.clear_form()
-        messagebox.showinfo("Success", "University updated successfully!")
+        try:
+            self.controller.update_university(uid, new_name, new_city_id, new_addr)
+            self.refresh_list()
+            self.update_total_count()
+            self.clear_form()
+            self.focus_set()
+            messagebox.showinfo("Success", "University updated successfully!", parent=self)
+        except ValueError as e:
+            messagebox.showerror("Lỗi", str(e), parent=self)
+        except Exception as e:
+            messagebox.showerror("Lỗi không xác định", str(e), parent=self)
 
     def on_delete(self):
         uid = self.selected_id()
@@ -472,19 +482,26 @@ class ManageUniversityWindow(tk.Toplevel):
             )
             return
         if messagebox.askyesno(
-            "Confirm Delete", "Are you sure you want to delete this university?"
+            "Confirm Delete", "Are you sure you want to delete this university?", parent=self
         ):
-            self.controller.delete_university(uid)
-            self.refresh_list()
-            self.clear_form()
-            messagebox.showinfo("Success", "University deleted!")
+            try:
+                self.controller.delete_university(uid)
+                self.refresh_list()
+                self.update_total_count()
+                self.clear_form()
+                self.focus_set()
+                messagebox.showinfo("Success", "University deleted!", parent=self)
+            except Exception as e:
+                messagebox.showerror("Lỗi", f"Không thể xóa: {str(e)}", parent=self)
 
     def on_search(self):
-        keyword = self.search_var.get().strip().lower()
+        keyword = self.search_var.get().strip() if self.search_var.get() else ""
 
         if not keyword:
             self.refresh_list()
             return
+        
+        keyword = keyword.lower()
 
         all_rows = self.controller.get_all_universities()
         filtered = []
@@ -543,3 +560,11 @@ class ManageUniversityWindow(tk.Toplevel):
         self.tree.selection_remove(self.tree.selection())
         self.tree.focus("")
         self.refresh_list()
+    
+    def update_total_count(self):
+        """Update the total count label"""
+        try:
+            total = len(self.controller.get_all_universities())
+            self.uni_count_label.config(text=str(total))
+        except Exception:
+            self.uni_count_label.config(text="0")

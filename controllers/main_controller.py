@@ -32,6 +32,9 @@ class MainController:
 
         # MAP Country name → id
         self.countries = {}
+        
+        # Track open windows to prevent duplicates
+        self.open_windows = {}
 
         self.load_initial_data()
 
@@ -87,30 +90,56 @@ class MainController:
         """
         choice là text từ combobox admin.
         Mỗi mục mở 1 WINDOW + 1 CONTROLLER tương ứng.
+        Ngăn mở nhiều cửa sổ cùng loại.
         """
+        # Check if window already exists and is still alive
+        if choice in self.open_windows:
+            window = self.open_windows[choice]
+            try:
+                # Check if window still exists
+                if window.winfo_exists():
+                    window.lift()  # Bring to front
+                    window.focus_set()
+                    return
+            except:
+                # Window was destroyed, remove from dict
+                pass
+            # Window doesn't exist anymore, remove from dict
+            del self.open_windows[choice]
 
+        window = None
         if choice == "Manage Country":
             controller = CountryController()
-            ManageCountryWindow(self.view.master, controller)
+            window = ManageCountryWindow(self.view.master, controller)
 
         elif choice == "Manage City":
             controller = CityController()
-            ManageCityWindow(self.view.master, controller)
+            window = ManageCityWindow(self.view.master, controller)
 
         elif choice == "Manage Program":
             controller = ProgramController()
-            ManageProgramWindow(self.view.master, controller)
+            window = ManageProgramWindow(self.view.master, controller)
 
         elif choice == "Manage University":
             controller = UniversityController()
-            ManageUniversityWindow(self.view.master, controller)
+            window = ManageUniversityWindow(self.view.master, controller)
 
         elif choice == "Manage Study Cost":
             controller = StudyCostController()
-            ManageStudyCostWindow(self.view.master, controller)
+            window = ManageStudyCostWindow(self.view.master, controller)
 
         else:
             messagebox.showinfo("Not implemented", f"{choice} window is not implemented.")
+            return
+        
+        # Store window reference and handle cleanup on close
+        if window:
+            self.open_windows[choice] = window
+            def on_close():
+                if choice in self.open_windows:
+                    del self.open_windows[choice]
+                window.destroy()
+            window.protocol("WM_DELETE_WINDOW", on_close)
 
     # ============================================================
     # XỬ LÝ BIỂU ĐỒ

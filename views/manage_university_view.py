@@ -180,7 +180,7 @@ class ManageUniversityWindow(tk.Toplevel):
             bg="white",
             fg="#3674B5",
             font=("Arial", 10, "bold")
-        ).grid(row=3, column=0, padx=(10, 0), sticky="w", pady=5)
+        ).grid(row=3, column=0, padx=(10, 0), sticky="e", pady=5)
         self.country_var = tk.StringVar()
         self.country_combo = ttk.Combobox(
             right_frame,
@@ -198,7 +198,7 @@ class ManageUniversityWindow(tk.Toplevel):
             bg="white",
             fg="#3674B5",
             font=("Arial", 10, "bold")
-        ).grid(row=4, column=0, padx=(10, 0), sticky="w", pady=5)
+        ).grid(row=4, column=0, padx=(10, 0), sticky="e", pady=5)
         self.city_var = tk.StringVar()
         self.city_combo = ttk.Combobox(
             right_frame,
@@ -215,7 +215,7 @@ class ManageUniversityWindow(tk.Toplevel):
             bg="white",
             fg="#3674B5",
             font=("Arial", 10, "bold")
-        ).grid(row=5, column=0, padx=(10, 0), sticky="w", pady=5)
+        ).grid(row=5, column=0, padx=(10, 0), sticky="e", pady=5)
         self.name_var = tk.StringVar()
         tk.Entry(right_frame, textvariable=self.name_var, width=30).grid(
             row=5, column=1, padx=(5, 10), pady=5
@@ -228,7 +228,7 @@ class ManageUniversityWindow(tk.Toplevel):
             bg="white",
             fg="#3674B5",
             font=("Arial", 10, "bold")
-        ).grid(row=6, column=0, padx=(10, 0), sticky="w", pady=5)
+        ).grid(row=6, column=0, padx=(10, 0), sticky="e", pady=5)
         self.addr_var = tk.StringVar()
         tk.Entry(right_frame, textvariable=self.addr_var, width=30).grid(
             row=6, column=1, padx=(5, 10), pady=5
@@ -394,15 +394,15 @@ class ManageUniversityWindow(tk.Toplevel):
         city_name = self.city_var.get().strip()
 
         if not name:
-            messagebox.showwarning("Thiếu thông tin", "Tên trường đại học không được để trống!")
+            messagebox.showwarning("Thiếu thông tin", "Tên trường đại học không được để trống!", parent=self)
             return
         if not city_name:
-            messagebox.showwarning("Thiếu thông tin", "Vui lòng chọn thành phố!")
+            messagebox.showwarning("Thiếu thông tin", "Vui lòng chọn thành phố!", parent=self)
             return
 
         city_id = self.city_map.get(city_name)
         if not city_id:
-            messagebox.showerror("Lỗi", "Thành phố không hợp lệ!")
+            messagebox.showerror("Lỗi", "Thành phố không hợp lệ!", parent=self)
             return
 
         address = self.addr_var.get().strip() or None
@@ -426,12 +426,11 @@ class ManageUniversityWindow(tk.Toplevel):
         except Exception as e:
             messagebox.showerror("Lỗi không xác định", str(e), parent=self)
 
+
     def on_update(self):
         uid = self.selected_id()
         if not uid:
-            messagebox.showwarning(
-                "Warning", "Vui lòng chọn một trường đại học để cập nhật!", parent=self
-            )
+            messagebox.showwarning("Cảnh báo", "Vui lòng chọn một trường đại học để cập nhật!", parent=self)
             return
 
         new_name = self.name_var.get().strip()
@@ -439,100 +438,87 @@ class ManageUniversityWindow(tk.Toplevel):
         new_addr = self.addr_var.get().strip() or None
 
         if not new_name:
-            messagebox.showwarning("Input Error", "University name is required!", parent=self)
+            messagebox.showwarning("Lỗi nhập liệu", "Tên trường đại học là bắt buộc!", parent=self)
             return
         if not new_city_name:
-            messagebox.showwarning("Input Error", "Please select a city!", parent=self)
+            messagebox.showwarning("Lỗi nhập liệu", "Vui lòng chọn thành phố!", parent=self)
             return
 
         new_city_id = self.city_map.get(new_city_name)
         if not new_city_id:
-            messagebox.showerror("Error", "Invalid city selected!", parent=self)
+            messagebox.showerror("Lỗi", "Thành phố không hợp lệ!", parent=self)
             return
 
         old_item = self.controller.get_university(uid)
+        if not old_item:
+            messagebox.showerror("Lỗi", "Không tìm thấy trường đại học!", parent=self)
+            return
+
         old_name = old_item["name"]
         old_city_id = old_item["city_id"]
-        old_addr = old_item["address"]
+        old_addr = old_item.get("address")
 
-        if (
-            new_name == old_name
-            and new_city_id == old_city_id
-            and (new_addr or "") == (old_addr or "")
-        ):
-            messagebox.showinfo("No Change", "No changes detected to update.", parent=self)
+        # Kiểm tra có thay đổi gì không
+        if new_name == old_name and new_city_id == old_city_id and (new_addr or "") == (old_addr or ""):
+            messagebox.showinfo("Không thay đổi", "Không có thay đổi nào để cập nhật.", parent=self)
             return
 
         try:
             self.controller.update_university(uid, new_name, new_city_id, new_addr)
             self.refresh_list()
-            self.update_total_count()
             self.clear_form()
+            self.update_total_count()
+            messagebox.showinfo("Thành công", "Cập nhật trường đại học thành công!", parent=self)
             self.focus_set()
-            messagebox.showinfo("Success", "University updated successfully!", parent=self)
-        except ValueError as e:
-            messagebox.showerror("Lỗi", str(e), parent=self)
         except Exception as e:
             messagebox.showerror("Lỗi không xác định", str(e), parent=self)
 
     def on_delete(self):
         uid = self.selected_id()
         if not uid:
-            messagebox.showwarning(
-                "Warning", "Please select a university to delete!"
-            )
+            messagebox.showwarning("Cảnh báo", "Vui lòng chọn một trường đại học để xóa!", parent=self)
             return
-        if messagebox.askyesno(
-            "Confirm Delete", "Are you sure you want to delete this university?", parent=self
-        ):
+
+        if messagebox.askyesno("Xác nhận", "Bạn có chắc muốn xóa trường đại học này?", parent=self):
             try:
                 self.controller.delete_university(uid)
                 self.refresh_list()
                 self.update_total_count()
                 self.clear_form()
                 self.focus_set()
-                messagebox.showinfo("Success", "University deleted!", parent=self)
+                messagebox.showinfo("Thành công", "Đã xóa trường đại học!", parent=self)
             except Exception as e:
                 messagebox.showerror("Lỗi", f"Không thể xóa: {str(e)}", parent=self)
 
+
     def on_search(self):
-        keyword = self.search_var.get().strip() if self.search_var.get() else ""
+        keyword = self.search_var.get().strip() or None
+        country_id = self.country_map.get(self.country_var.get()) if self.country_var.get() else None
+        city_id = self.city_map.get(self.city_var.get()) if self.city_var.get() else None
 
-        if not keyword:
-            self.refresh_list()
-            return
-        
-        keyword = keyword.lower()
+        try:
+            filtered = self.controller.search_university(keyword=keyword, country_id=country_id, city_id=city_id)
 
-        all_rows = self.controller.get_all_universities()
-        filtered = []
-        for r in all_rows:
-            if (
-                keyword in r["name"].lower()
-                or keyword in r["city"].lower()
-                or keyword in r["country"].lower()
-                or (r.get("address") and keyword in r["address"].lower())
-            ):
-                filtered.append(r)
+            self.tree.delete(*self.tree.get_children())
+            self.tree.tag_configure("evenrow", background="white")
+            self.tree.tag_configure("oddrow", background="#D1F8EF")
 
-        self.tree.delete(*self.tree.get_children())
-        self.tree.tag_configure("evenrow", background="white")
-        self.tree.tag_configure("oddrow", background="#D1F8EF")
-
-        for i, r in enumerate(filtered):
-            tag = "evenrow" if i % 2 == 0 else "oddrow"
-            self.tree.insert(
-                "",
-                "end",
-                values=(
-                    r["id"],
-                    r["name"],
-                    r["city"],
-                    r["country"],
-                    r.get("address", ""),
-                ),
-                tags=(tag,),
-            )
+            for i, r in enumerate(filtered):
+                tag = "evenrow" if i % 2 == 0 else "oddrow"
+                self.tree.insert(
+                    "",
+                    "end",
+                    values=(
+                        r["id"],
+                        r["name"],
+                        r["city"],
+                        r["country"],
+                        r.get("address", ""),
+                    ),
+                    tags=(tag,),
+                )
+        except Exception as e:
+            messagebox.showerror("Lỗi", f"Tìm kiếm thất bại:\n{e}", parent=self)
 
     def on_country_changed(self, choice=None):
         country_name = self.country_var.get().strip()

@@ -191,14 +191,14 @@ class ManageStudyCostWindow(tk.Toplevel):
                 bg="white",
                 fg="#3674B5",
                 font=("Arial", 10, "bold")
-            ).grid(row=row_id, column=0, padx=(10, 0), sticky="w", pady=3)
+            ).grid(row=row_id, column=0, padx=(10, 0), sticky="e", pady=3)
 
             setattr(self, var, tk.StringVar())
             cb = ttk.Combobox(
                 right_frame,
                 textvariable=getattr(self, var),
                 state="readonly",
-                width=25
+                width=30
             )
             setattr(self, combo, cb)
             cb.grid(row=row_id, column=1, sticky="w", padx=(5, 10), pady=3)
@@ -211,7 +211,7 @@ class ManageStudyCostWindow(tk.Toplevel):
             bg="white",
             fg="#3674B5",
             font=("Arial", 10, "bold")
-        ).grid(row=row_id, column=0, padx=(10, 0), sticky="w", pady=3)
+        ).grid(row=row_id, column=0, padx=(10, 0), sticky="e", pady=3)
 
         self.duration_var = tk.StringVar()
         tk.Entry(right_frame, textvariable=self.duration_var, width=25).grid(
@@ -237,7 +237,7 @@ class ManageStudyCostWindow(tk.Toplevel):
                 bg="white",
                 fg="#3674B5",
                 font=("Arial", 10, "bold")
-            ).grid(row=row_id, column=0, padx=(10, 0), sticky="w", pady=3)
+            ).grid(row=row_id, column=0, padx=(10, 0), sticky="e", pady=3)
 
             var = tk.StringVar()
             tk.Entry(right_frame, textvariable=var, width=25).grid(
@@ -400,127 +400,114 @@ class ManageStudyCostWindow(tk.Toplevel):
         uni_id = self.uni_map.get(self.uni_var.get())
         prog_id = self.prog_map.get(self.prog_var.get())
         if not uni_id or not prog_id:
-            messagebox.showwarning("Lỗi", "Vui lòng chọn Trường và Chương trình!")
+            messagebox.showwarning("Lỗi", "Vui lòng chọn Trường và Chương trình!", parent=self)
             return
 
         try:
             self.controller.add_study_cost(
                 university_id=uni_id,
                 program_id=prog_id,
-                duration_years=self.get_decimal(self.duration_var),
-                tuition_usd=self.get_decimal(self.cost_vars["tuition_var"]),
-                living_cost_index=self.get_decimal(self.cost_vars["living_idx_var"]),
-                rent_usd=self.get_decimal(self.cost_vars["rent_var"]),
-                visa_fee_usd=self.get_decimal(self.cost_vars["visa_var"]),
-                insurance_usd=self.get_decimal(self.cost_vars["insurance_var"]),
-                exchange_rate=self.get_decimal(self.cost_vars["exchange_var"]),
+                duration=self.get_decimal(self.duration_var),
+                tuition=self.get_decimal(self.cost_vars["tuition_var"]),
+                living_idx=self.get_decimal(self.cost_vars["living_idx_var"]),
+                rent=self.get_decimal(self.cost_vars["rent_var"]),
+                visa=self.get_decimal(self.cost_vars["visa_var"]),
+                insurance=self.get_decimal(self.cost_vars["insurance_var"]),
+                exchange=self.get_decimal(self.cost_vars["exchange_var"]),
+                parent=self
             )
-            messagebox.showinfo("Thành công", "Thêm chi phí du học thành công!")
+            messagebox.showinfo("Thành công", "Thêm chi phí du học thành công!", parent=self)
             self.refresh_list()
+            self.update_total_count()
             self.clear_form()
+            self.focus_set()
         except Exception as e:
-            messagebox.showerror("Lỗi", f"Không thể thêm:\n{e}")
+            messagebox.showerror("Lỗi", f"Không thể thêm:\n{e}", parent=self)
 
     def on_update(self):
         cost_id = self.selected_id()
         if not cost_id:
-            messagebox.showwarning(
-                "Warning", "Please select a study cost to update!"
-            )
+            messagebox.showwarning("Cảnh báo", "Vui lòng chọn chi phí du học để cập nhật!", parent=self)
             return
 
         new_data = {
             "university_id": self.uni_map.get(self.uni_var.get()),
             "program_id": self.prog_map.get(self.prog_var.get()),
-            "duration_years": self.get_decimal(self.duration_var),
-            "tuition_usd": self.get_decimal(self.cost_vars["tuition_var"]),
-            "living_cost_index": self.get_decimal(self.cost_vars["living_idx_var"]),
-            "rent_usd": self.get_decimal(self.cost_vars["rent_var"]),
-            "visa_fee_usd": self.get_decimal(self.cost_vars["visa_var"]),
-            "insurance_usd": self.get_decimal(self.cost_vars["insurance_var"]),
-            "exchange_rate": self.get_decimal(self.cost_vars["exchange_var"]),
+            "duration": self.get_decimal(self.duration_var),
+            "tuition": self.get_decimal(self.cost_vars["tuition_var"]),
+            "living_idx": self.get_decimal(self.cost_vars["living_idx_var"]),
+            "rent": self.get_decimal(self.cost_vars["rent_var"]),
+            "visa": self.get_decimal(self.cost_vars["visa_var"]),
+            "insurance": self.get_decimal(self.cost_vars["insurance_var"]),
+            "exchange": self.get_decimal(self.cost_vars["exchange_var"]),
+            "parent": self
         }
 
         try:
-            old_data = self.controller.get_study_cost(cost_id)
-        except Exception as e:
-            messagebox.showerror("Error", f"Unable to retrieve old data:\n{e}")
-            return
-
-        no_change = True
-        for key in new_data:
-            old_val = old_data.get(key)
-            new_val = new_data.get(key)
-            if str(old_val) != str(new_val):
-                no_change = False
-                break
-
-        if no_change:
-            messagebox.showinfo("No Change", "No changes detected to update.")
-            return
-
-        try:
             self.controller.update_study_cost(cost_id, **new_data)
-            messagebox.showinfo("Success", "Study cost updated successfully!")
+            messagebox.showinfo("Thành công", "Cập nhật chi phí du học thành công!", parent=self)
             self.refresh_list()
+            self.update_total_count()
             self.clear_form()
+            self.focus_set()
         except Exception as e:
-            messagebox.showerror("Error", f"Unable to update:\n{e}")
+            messagebox.showerror("Lỗi", f"Không thể cập nhật:\n{e}", parent=self)
+
 
     def on_delete(self):
         cid = self.selected_id()
-        if cid and messagebox.askyesno(
-            "Confirm", "Delete this study cost record?"
-        ):
-            self.controller.delete_study_cost(cid)
-            self.refresh_list()
-            self.clear_form()
+        if cid and messagebox.askyesno("Xác nhận", "Bạn có chắc muốn xóa chi phí du học này?", parent=self):
+            try:
+                self.controller.delete_study_cost(cid, parent=self)
+                self.refresh_list()
+                self.update_total_count()
+                self.clear_form()
+                self.focus_set()
+            except Exception as e:
+                messagebox.showerror("Lỗi", f"Không thể xóa:\n{e}", parent=self)
 
     def on_search(self):
-        keyword = self.search_var.get().strip().lower()
-        if not keyword:
-            self.refresh_list()
-            return
+        keyword = self.search_var.get().strip()
+        uni_id = self.uni_map.get(self.uni_var.get())
+        prog_id = self.prog_map.get(self.prog_var.get())
 
-        all_rows = self.controller.get_all_study_costs()
-        filtered = []
-        for r in all_rows:
-            if (
-                keyword in str(r.get("university", "")).lower()
-                or keyword in str(r.get("program", "")).lower()
-                or keyword in str(r.get("duration_years", "")).lower()
-                or keyword in str(r.get("tuition_usd", "")).lower()
-                or keyword in str(r.get("living_cost_index", "")).lower()
-                or keyword in str(r.get("rent_usd", "")).lower()
-                or keyword in str(r.get("visa_fee_usd", "")).lower()
-                or keyword in str(r.get("insurance_usd", "")).lower()
-                or keyword in str(r.get("exchange_rate", "")).lower()
-            ):
-                filtered.append(r)
-
-        self.tree.delete(*self.tree.get_children())
-        self.tree.tag_configure("even", background="white")
-        self.tree.tag_configure("odd", background="#D1F8EF")
-
-        for i, r in enumerate(filtered):
-            tag = "even" if i % 2 == 0 else "odd"
-            self.tree.insert(
-                "",
-                "end",
-                values=(
-                    r["id"],
-                    r["university"],
-                    r["program"],
-                    r["duration_years"] or "",
-                    r["tuition_usd"] or "",
-                    r["living_cost_index"] or "",
-                    r["rent_usd"] or "",
-                    r["visa_fee_usd"] or "",
-                    r["insurance_usd"] or "",
-                    r["exchange_rate"] or "",
-                ),
-                tags=(tag,),
+        try:
+            filtered = self.controller.search_study_cost(
+                keyword=keyword or None,
+                university_id=uni_id or None,
+                program_id=prog_id or None
             )
+            self.tree.delete(*self.tree.get_children())
+            self.tree.tag_configure("even", background="white")
+            self.tree.tag_configure("odd", background="#D1F8EF")
+
+            for i, r in enumerate(filtered):
+                tag = "even" if i % 2 == 0 else "odd"
+                self.tree.insert(
+                    "",
+                    "end",
+                    values=(
+                        r["id"],
+                        r["university"],
+                        r["program"],
+                        r.get("duration_years", ""),
+                        r.get("tuition_usd", ""),
+                        r.get("living_cost_index", ""),
+                        r.get("rent_usd", ""),
+                        r.get("visa_fee_usd", ""),
+                        r.get("insurance_usd", ""),
+                        r.get("exchange_rate", "")
+                    ),
+                    tags=(tag,)
+                )
+        except Exception as e:
+            messagebox.showerror("Lỗi", f"Tìm kiếm thất bại:\n{e}", parent=self)
+    def update_total_count(self):
+        try:
+            total_costs = len(self.controller.get_all_study_costs())
+        except Exception:
+            total_costs = 0
+        self.study_count_label.config(text=str(total_costs))
 
     def clear_form(self):
         for var in (

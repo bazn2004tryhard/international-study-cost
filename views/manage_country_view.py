@@ -296,6 +296,8 @@ class ManageCountryWindow(tk.Toplevel):
             messagebox.showerror("Lỗi", f"Không thể thêm quốc gia: {str(e)}", parent=self)
 
     def on_update(self):
+        if not self.validate_input():
+            return
         cid = self.selected_id()
         if not cid:
             messagebox.showwarning("Warning", "Vui lòng chọn một quốc gia để cập nhật!", parent=self)
@@ -385,8 +387,4 @@ class ManageCountryWindow(tk.Toplevel):
         if not population.isdigit():
             messagebox.showwarning("Warning", "Population phải là số!", parent=self)
             return False
-        if not currency.isdigit():
-            messagebox.showwarning("Warning", "Currency phải là số!", parent=self)
-            return False
-
         return True

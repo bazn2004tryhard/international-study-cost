@@ -312,6 +312,8 @@ class ManageCityWindow(tk.Toplevel):
                 messagebox.showerror("Lỗi không xác định", f"Không thể thêm thành phố:\n{error_msg}", parent=self)
 
     def on_update(self):
+        if not self.check_entry():
+            return
         cid = self.selected_id()
         if not cid:
             messagebox.showwarning("Warning", "Vui lòng chọn một thành phố để cập nhật!", parent=self)

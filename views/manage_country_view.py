@@ -222,13 +222,14 @@ class ManageCountryWindow(tk.Toplevel):
         except Exception:
             total = 0
 
-        tk.Label(
+        self.country_count_label = tk.Label(
             summary_card,
             text=str(total),
             font=("Segoe UI", 36, "bold"),
             fg="white",
             bg="#659263"
-        ).place(x=20, y=30)
+        )
+        self.country_count_label.place(x=20, y=30)
 
         tk.Label(
             summary_card,
@@ -276,43 +277,66 @@ class ManageCountryWindow(tk.Toplevel):
     def on_add(self):
         if not self.validate_input():
             return
-        self.controller.add_country(
-            self.name_var.get(),
-            self.code_var.get(),
-            self.population_var.get(),
-            self.currency_var.get()
-        )
-        self.refresh_list()
-        self.reset_entry()
-        messagebox.showinfo("Success", "Country added successfully")
+        
+        name = self.name_var.get().strip()
+        code = self.code_var.get().strip()
+        population = self.population_var.get().strip()
+        currency = self.currency_var.get().strip()
+        
+        try:
+            self.controller.add_country(name, code, population, currency)
+            self.refresh_list()
+            self.update_total_count()
+            self.reset_entry()
+            self.focus_set()
+            messagebox.showinfo("Success", "Country added successfully", parent=self)
+        except ValueError as e:
+            messagebox.showerror("Lỗi", str(e), parent=self)
+        except Exception as e:
+            messagebox.showerror("Lỗi", f"Không thể thêm quốc gia: {str(e)}", parent=self)
 
     def on_update(self):
         cid = self.selected_id()
         if not cid:
-            return messagebox.showwarning("Warning", "Select an item first")
+            messagebox.showwarning("Warning", "Vui lòng chọn một quốc gia để cập nhật!", parent=self)
+            return
         if not self.validate_input():
             return
-        self.controller.update_country(
-            cid,
-            self.name_var.get(),
-            self.code_var.get(),
-            self.population_var.get(),
-            self.currency_var.get()
-        )
-        self.refresh_list()
+        try:
+            self.controller.update_country(
+                cid,
+                self.name_var.get().strip(),
+                self.code_var.get().strip(),
+                self.population_var.get().strip(),
+                self.currency_var.get().strip()
+            )
+            self.refresh_list()
+            self.update_total_count()
+            self.focus_set()
+            messagebox.showinfo("Success", "Country updated successfully", parent=self)
+        except ValueError as e:
+            messagebox.showerror("Lỗi", str(e), parent=self)
+        except Exception as e:
+            messagebox.showerror("Lỗi", f"Không thể cập nhật: {str(e)}", parent=self)
 
     def on_delete(self):
         cid = self.selected_id()
         if not cid:
-            return messagebox.showwarning("Warning", "Select an item first")
-        if messagebox.askyesno("Confirm", "Are you sure you want to delete this country?"):
-            success = self.controller.delete_country(cid)
-            if success:
-                messagebox.showinfo("Success", "Country deleted successfully")
-                self.refresh_list()
-                self.reset_entry()
-            else:
-                messagebox.showerror("Error", "Failed to delete country")
+            messagebox.showwarning("Warning", "Vui lòng chọn một quốc gia để xóa!", parent=self)
+            return
+        if messagebox.askyesno("Confirm", "Are you sure you want to delete this country?", parent=self):
+            try:
+                success = self.controller.delete_country(cid)
+                if success:
+                    self.refresh_list()
+                    self.update_total_count()
+                    self.reset_entry()
+                    self.focus_set()
+                    messagebox.showinfo("Success", "Country deleted successfully", parent=self)
+                else:
+                    messagebox.showerror("Error", "Failed to delete country", parent=self)
+            except Exception as e:
+                messagebox.showerror("Error", f"Không thể xóa: {str(e)}", parent=self)
 
     def reset_entry(self):
         self.name_var.set("")
@@ -321,7 +345,8 @@ class ManageCountryWindow(tk.Toplevel):
         self.currency_var.set("")
 
     def on_search(self):
-        rows = self.controller.search_country(self.search_var.get())
+        keyword = self.search_var.get().strip() if self.search_var.get() else ""
+        rows = self.controller.search_country(keyword)
         self.tree.delete(*self.tree.get_children())
         for idx, r in enumerate(rows):
             tag = "even" if idx % 2 == 0 else "odd"
@@ -330,6 +355,14 @@ class ManageCountryWindow(tk.Toplevel):
                 values=(r["id"], r["name"], r["country_code"], r["population"], r["currency"]),
                 tags=(tag,)
             )
+    
+    def update_total_count(self):
+        """Update the total count label"""
+        try:
+            total = len(self.controller.get_all_countries())
+            self.country_count_label.config(text=str(total))
+        except Exception:
+            self.country_count_label.config(text="0")
 
     def validate_input(self):
         name = self.name_var.get().strip()
@@ -338,19 +371,22 @@ class ManageCountryWindow(tk.Toplevel):
         currency = self.currency_var.get().strip()
 
         # Kiểm tra rỗng
-        if not name or not code or not population or not currency:
-            messagebox.showwarning("Warning", "All fields are required")
+        if not name:
+            messagebox.showwarning("Warning", "Tên quốc gia không được để trống!", parent=self)
+            return False
+        if not code or not population or not currency:
+            messagebox.showwarning("Warning", "Tất cả các trường đều bắt buộc!", parent=self)
             return False
 
         # Kiểm tra code, population, currency là số
         if not code.isdigit():
-            messagebox.showwarning("Warning", "Code must be a number")
+            messagebox.showwarning("Warning", "Code phải là số!", parent=self)
             return False
         if not population.isdigit():
-            messagebox.showwarning("Warning", "Population must be a number")
+            messagebox.showwarning("Warning", "Population phải là số!", parent=self)
             return False
         if not currency.isdigit():
-            messagebox.showwarning("Warning", "Currency must be a number")
+            messagebox.showwarning("Warning", "Currency phải là số!", parent=self)
             return False
 
         return True

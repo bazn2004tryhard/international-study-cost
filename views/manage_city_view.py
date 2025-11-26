@@ -15,7 +15,7 @@ class ManageCityWindow(tk.Toplevel):
         self.setup_styles()
 
         self.create_widgets()
-        self.refresh_list()
+        self.refresh_list()  # Load danh sách mặc định khi mở
 
     # ------------------------------------------------------
     # LOAD ICONS  (ĐÃ SỬA DÙNG resource_path)
@@ -219,13 +219,14 @@ class ManageCityWindow(tk.Toplevel):
         except Exception:
             total = 0
 
-        tk.Label(
+        self.city_count_label = tk.Label(
             summary_card,
             text=str(total),
             font=("Segoe UI", 36, "bold"),
             fg="white",
             bg="#7C7E7C"
-        ).place(x=20, y=30)
+        )
+        self.city_count_label.place(x=20, y=30)
 
         tk.Label(
             summary_card,
@@ -272,42 +273,83 @@ class ManageCityWindow(tk.Toplevel):
     def on_add(self):
         if not self.check_entry():
             return
-        self.controller.add_city(
-            self.city_var.get(),
-            self.country_id_var.get(),
-            self.city_code_var.get()
-        )
-        self.refresh_list()
-        self.reset_entry()
-        messagebox.showinfo("Success", "City added successfully!")
+        
+        city_name = self.city_var.get().strip()
+        country_id = self.country_id_var.get().strip()
+        city_code = self.city_code_var.get().strip()
+        
+        try:
+            self.controller.add_city(city_name, country_id, city_code)
+            self.refresh_list()
+            self.update_total_count()
+            self.reset_entry()
+            # Keep focus on current window
+            self.focus_set()
+            messagebox.showinfo("Success", "City added successfully!", parent=self)
+        except ValueError as e:
+            messagebox.showerror("Lỗi", str(e), parent=self)
+        except Exception as e:
+            # Bắt tất cả các lỗi khác, đặc biệt là IntegrityError từ database
+            error_msg = str(e)
+            if "1062" in error_msg or "Duplicate" in error_msg or "uq_city_country" in error_msg:
+                # Lấy tên quốc gia để hiển thị thông báo rõ ràng hơn
+                try:
+                    countries = self.controller.get_countries()
+                    country = next((c for c in countries if str(c["id"]) == str(country_id)), None)
+                    country_name = country["name"] if country else f"quốc gia ID {country_id}"
+                    messagebox.showerror(
+                        "Lỗi", 
+                        f"Thành phố '{city_name}' đã tồn tại trong {country_name}!\nKhông thể thêm trùng.",
+                        parent=self
+                    )
+                except:
+                    messagebox.showerror(
+                        "Lỗi", 
+                        f"Thành phố '{city_name}' đã tồn tại trong quốc gia này!\nKhông thể thêm trùng.",
+                        parent=self
+                    )
+            else:
+                messagebox.showerror("Lỗi không xác định", f"Không thể thêm thành phố:\n{error_msg}", parent=self)
 
     def on_update(self):
-        if not self.check_entry():
-            return
         cid = self.selected_id()
         if not cid:
-            return messagebox.showwarning("Warning", "Select an item first")
-        self.controller.update_city(
-            cid,
-            self.city_var.get(),
-            self.country_id_var.get(),
-            self.city_code_var.get()
-        )
-        self.refresh_list()
-        messagebox.showinfo("Success", "City updated successfully!")
+            messagebox.showwarning("Warning", "Vui lòng chọn một thành phố để cập nhật!", parent=self)
+            return
+        if not self.check_entry():
+            return
+        try:
+            self.controller.update_city(
+                cid,
+                self.city_var.get().strip(),
+                self.country_id_var.get().strip(),
+                self.city_code_var.get().strip()
+            )
+            self.refresh_list()
+            self.update_total_count()
+            self.focus_set()
+            messagebox.showinfo("Success", "City updated successfully!", parent=self)
+        except Exception as e:
+            messagebox.showerror("Lỗi", f"Không thể cập nhật: {str(e)}", parent=self)
 
     def on_delete(self):
         cid = self.selected_id()
         if not cid:
-            return messagebox.showwarning("Warning", "Select an item first")
-        if messagebox.askyesno("Confirm", "Are you sure you want to delete this city?"):
-            success = self.controller.delete_city(cid)
-            if success:
-                messagebox.showinfo("Success", "City deleted successfully")
-                self.refresh_list()
-                self.reset_entry()
-            else:
-                messagebox.showerror("Error", "Failed to delete city")
+            messagebox.showwarning("Warning", "Vui lòng chọn một thành phố để xóa!", parent=self)
+            return
+        if messagebox.askyesno("Confirm", "Are you sure you want to delete this city?", parent=self):
+            try:
+                success = self.controller.delete_city(cid)
+                if success:
+                    self.refresh_list()
+                    self.update_total_count()
+                    self.reset_entry()
+                    self.focus_set()
+                    messagebox.showinfo("Success", "City deleted successfully", parent=self)
+                else:
+                    messagebox.showerror("Error", "Failed to delete city", parent=self)
+            except Exception as e:
+                messagebox.showerror("Error", f"Không thể xóa: {str(e)}", parent=self)
 
     def reset_entry(self):
         self.city_var.set("")
@@ -315,7 +357,8 @@ class ManageCityWindow(tk.Toplevel):
         self.city_code_var.set("")
 
     def on_search(self):
-        rows = self.controller.search_city(self.search_var.get())
+        keyword = self.search_var.get().strip() if self.search_var.get() else ""
+        rows = self.controller.search_city(keyword)
         self.tree.delete(*self.tree.get_children())
         for idx, r in enumerate(rows):
             tag = "even" if idx % 2 == 0 else "odd"
@@ -324,6 +367,14 @@ class ManageCityWindow(tk.Toplevel):
                 values=(r["id"], r["city"], r["country_id"], r["city_code"]),
                 tags=(tag,)
             )
+    
+    def update_total_count(self):
+        """Update the total count label"""
+        try:
+            total = len(self.controller.get_all_cities())
+            self.city_count_label.config(text=str(total))
+        except Exception:
+            self.city_count_label.config(text="0")
 
     # ------------------------------------------------------
     # VALIDATE

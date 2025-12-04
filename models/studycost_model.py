@@ -159,7 +159,7 @@ class StudyCostModel(BaseModel):
         return self.execute_non_query(query, (cost_id,))
 
     # ============================================================
-    # CHART QUERIES
+    # CHART QUERIES CŨ
     # ============================================================
     def get_tuition_by_university_and_level(self, country_id):
         query = """
@@ -224,6 +224,73 @@ class StudyCostModel(BaseModel):
             GROUP BY p.level
         """
         return self.execute_query(query, (country_id,), fetchall=True)
+
+    # ============================================================
+    # CHART QUERIES MỚI
+    # ============================================================
+    def get_avg_living_index_by_city(self, country_id):
+        """
+        Living cost index trung bình theo thành phố trong 1 quốc gia.
+        """
+        query = """
+            SELECT 
+                ci.name AS city,
+                AVG(s.living_cost_index) AS avg_living_index
+            FROM study_costs s
+            JOIN universities u ON s.university_id = u.id
+            JOIN cities ci ON u.city_id = ci.id
+            JOIN countries c ON ci.country_id = c.id
+            WHERE c.id = %s
+            GROUP BY ci.id
+        """
+        return self.execute_query(query, (country_id,), fetchall=True)
+
+    def get_avg_total_cost_by_level(self, country_id):
+        """
+        Tổng chi phí trung bình theo level (Bachelor/Master/PhD).
+        Total = Tuition + Rent*12 + Visa + Insurance
+        """
+        query = """
+            SELECT 
+                p.level,
+                AVG(
+                    IFNULL(s.tuition_usd,0)
+                    + IFNULL(s.rent_usd,0) * 12
+                    + IFNULL(s.visa_fee_usd,0)
+                    + IFNULL(s.insurance_usd,0)
+                ) AS avg_total_cost
+            FROM study_costs s
+            JOIN universities u ON s.university_id = u.id
+            JOIN cities ci ON u.city_id = ci.id
+            JOIN countries c ON ci.country_id = c.id
+            JOIN programs p ON s.program_id = p.id
+            WHERE c.id = %s
+            GROUP BY p.level
+        """
+        return self.execute_query(query, (country_id,), fetchall=True)
+
+    def get_avg_tuition_by_program(self, country_id):
+        """
+        Học phí trung bình theo từng program (ngành học).
+        """
+        query = """
+            SELECT 
+                p.name AS program,
+                AVG(s.tuition_usd) AS avg_tuition
+            FROM study_costs s
+            JOIN universities u ON s.university_id = u.id
+            JOIN cities ci ON u.city_id = ci.id
+            JOIN countries c ON ci.country_id = c.id
+            JOIN programs p ON s.program_id = p.id
+            WHERE c.id = %s
+            GROUP BY p.id
+            ORDER BY avg_tuition DESC
+        """
+        return self.execute_query(query, (country_id,), fetchall=True)
+
+    # ============================================================
+    # LIST ALL (CHO MANAGE STUDY COST)
+    # ============================================================
     def get_all_study_costs(self):
         query = """
             SELECT 

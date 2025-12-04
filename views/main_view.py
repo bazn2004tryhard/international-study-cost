@@ -141,12 +141,15 @@ class MainView(tk.Frame):
 
         self.chart_var = tk.StringVar()
         self.chart_combo = ttk.Combobox(
-            ch, textvariable=self.chart_var, state="readonly", width=25,
+            ch, textvariable=self.chart_var, state="readonly", width=30,
             values=[
                 "Average tuition by level",
                 "Total yearly cost by university",
                 "Average rent by city",
                 "Number of programs by level",
+                "Average living index by city",
+                "Average total cost by program level",
+                "Average tuition by program",
             ]
         )
         self.chart_combo.grid(row=0, column=1)

@@ -177,5 +177,26 @@ class MainController:
                 y = [int(row["program_count"]) for row in data]
                 self.view.show_chart("Program count", "Level", "Count", x, y)
 
+            # --------- BIỂU ĐỒ MỚI 1 ----------
+            elif chart_type == "Average living index by city":
+                data = self.study_cost_model.get_avg_living_index_by_city(country_id)
+                x = [row["city"] for row in data]
+                y = [float(row["avg_living_index"] or 0) for row in data]
+                self.view.show_chart("Average living index", "City", "Living index", x, y)
+
+            # --------- BIỂU ĐỒ MỚI 2 ----------
+            elif chart_type == "Average total cost by program level":
+                data = self.study_cost_model.get_avg_total_cost_by_level(country_id)
+                x = [row["level"] for row in data]
+                y = [float(row["avg_total_cost"] or 0) for row in data]
+                self.view.show_chart("Average total cost", "Level", "Total cost USD", x, y)
+
+            # --------- BIỂU ĐỒ MỚI 3 ----------
+            elif chart_type == "Average tuition by program":
+                data = self.study_cost_model.get_avg_tuition_by_program(country_id)
+                x = [row["program"] for row in data]
+                y = [float(row["avg_tuition"] or 0) for row in data]
+                self.view.show_chart("Average tuition by program", "Program", "Tuition USD", x, y)
+
         except Exception as e:
             messagebox.showerror("Chart error", str(e))
